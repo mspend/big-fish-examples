@@ -8,6 +8,7 @@ def main():
     datastore_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore")
     datastore = qi2labDataStore(datastore_path)
     output_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/big_fish")
+    output_path.mkdir(parents=True, exist_ok=True)
     spacing_zyx_um = datastore.voxel_size_zyx_um
 
     tile_idx = 0
@@ -36,15 +37,15 @@ def main():
                 photometric='minisblack',
                 resolutionunit='CENTIMETER',
             )
-            # tif.write(
-            #     bit_data,
-            #     resolution=(
-            #         1e4 / float(spacing_zyx_um[2]),
-            #         1e4 / float(spacing_zyx_um[1])
-            #     ),
-            #     **options,
-            #     metadata=metadata
-            # )
+            tif.write(
+                bit_data,
+                resolution=(
+                    1e4 / float(spacing_zyx_um[2]),
+                    1e4 / float(spacing_zyx_um[1])
+                ),
+                **options,
+                metadata=metadata
+            )
 
 if __name__ == "__main__":
     main()
