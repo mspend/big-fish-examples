@@ -21,7 +21,6 @@ def main():
     round_idx = 0
 
     round_data = datastore.load_local_registered_image(tile=tile_idx,round=round_idx,return_future=False)
-    print(round_data)
 
     # n_rounds = 8
 
@@ -30,7 +29,6 @@ def main():
     #     print(round_idx)
     #     round_data = datastore.load_local_registered_image(tile=tile_idx,round=round_idx,return_future=False)
     #     # print(round_data.dtype)
-    #     print(round_data)
 
     #     # If loader returns a lazy/dask array or future-like, try to materialize it.
     #     if round_data is not None and hasattr(round_data, "compute"):
@@ -44,37 +42,38 @@ def main():
     #         print(f"Warning: no image data for tile {tile_idx} round {round_idx}; skipping")
     #         continue
 
-    #     filename = "tile"+str(tile_idx).zfill(3)+"round"+str(round_idx).zfill(3)+"corrected_polyDT.ome.tiff"
-    #     filename_path = output_path / Path(filename)
-    #     with TiffWriter(filename_path, bigtiff=True) as tif:
-    #         metadata={
-    #             'axes': 'ZYX',
-    #             'SignificantBits': 16,
-    #             'PhysicalSizeX': float(spacing_zyx_um[2]),
-    #             'PhysicalSizeXUnit': 'µm',
-    #             'PhysicalSizeY': float(spacing_zyx_um[1]),
-    #             'PhysicalSizeYUnit': 'µm',
-    #             'PhysicalSizeZ': float(spacing_zyx_um[0]),
-    #             'PhysicalSizeZUnit': 'µm',
-    #         }
-    #         options = dict(
-    #             compression='zlib',
-    #             compressionargs={'level': 8},
-    #             predictor=True,
-    #             photometric='minisblack',
-    #             resolutionunit='CENTIMETER',
-    #         )
-    #         tif.write(
-    #             round_data,
-    #             shape=round_data.shape,
-    #             dtype=round_data.dtype,
-    #             resolution=(
-    #                 1e4 / float(spacing_zyx_um[2]),
-    #                 1e4 / float(spacing_zyx_um[1])
-    #             ),
-    #             **options,
-    #             metadata=metadata
-    #         )
+            "tile"+str(tile_idx).zfill(3)+"bit"+str(bit_idx).zfill(3)+".ome.tiff"
+    filename = "tile"+str(tile_idx).zfill(3)+"round"+str(round_idx).zfill(3)+"corrected_polyDT.ome.tiff"
+    filename_path = output_path / Path(filename)
+    with TiffWriter(filename_path, bigtiff=True) as tif:
+        metadata={
+            'axes': 'ZYX',
+            'SignificantBits': 16,
+            'PhysicalSizeX': float(spacing_zyx_um[2]),
+            'PhysicalSizeXUnit': 'µm',
+            'PhysicalSizeY': float(spacing_zyx_um[1]),
+            'PhysicalSizeYUnit': 'µm',
+            'PhysicalSizeZ': float(spacing_zyx_um[0]),
+            'PhysicalSizeZUnit': 'µm',
+        }
+        options = dict(
+            compression='zlib',
+            compressionargs={'level': 8},
+            predictor=True,
+            photometric='minisblack',
+            resolutionunit='CENTIMETER',
+        )
+        tif.write(
+            round_data,
+            shape=round_data.shape,
+            dtype=round_data.dtype,
+            resolution=(
+                1e4 / float(spacing_zyx_um[2]),
+                1e4 / float(spacing_zyx_um[1])
+            ),
+            **options,
+            metadata=metadata
+        )
 
 if __name__ == "__main__":
     main()
