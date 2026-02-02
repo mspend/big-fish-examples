@@ -42,7 +42,6 @@ def main():
     #         print(f"Warning: no image data for tile {tile_idx} round {round_idx}; skipping")
     #         continue
 
-            "tile"+str(tile_idx).zfill(3)+"bit"+str(bit_idx).zfill(3)+".ome.tiff"
     filename = "tile"+str(tile_idx).zfill(3)+"round"+str(round_idx).zfill(3)+"corrected_polyDT.ome.tiff"
     filename_path = output_path / Path(filename)
     with TiffWriter(filename_path, bigtiff=True) as tif:
