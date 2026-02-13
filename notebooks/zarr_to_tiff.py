@@ -1,16 +1,18 @@
 # packages availabe in merfish3d environment
 # this makes one tiff file for each bit in the tile.
 
-from merfish3danalysis.qi2labDataStore import qi2labDataStore
+# from merfish3danalysis.qi2labDataStore import qi2labDataStore
 from tifffile import TiffWriter
 from pathlib import Path
+import bigfish.stack as stack
+import os
 
 def main():
-    datastore_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore")
-    datastore = qi2labDataStore(datastore_path)
+    # datastore_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore")
+    # datastore = qi2labDataStore(datastore_path)
     output_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/big_fish")
     output_path.mkdir(parents=True, exist_ok=True)
-    spacing_zyx_um = datastore.voxel_size_zyx_um
+    # spacing_zyx_um = datastore.voxel_size_zyx_um
 
     # if I load the rounds instead of bits, the function load_local_registered_image will automatically detect that you are looking for the fiducial channel (polyDT) instead of the bit data (spots)
 
@@ -20,7 +22,14 @@ def main():
     # path_to_data = "/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/polyDT/tile0000/round001.zarr/registered_decon_data"
     round_idx = 0
 
-    round_data = datastore.load_local_registered_image(tile=tile_idx,round=round_idx,return_future=False)
+    # round_data = datastore.load_local_registered_image(tile=tile_idx,round=round_idx,return_future=False)
+    path_input = "/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/big_fish"
+    path = os.path.join(path_input, "tile000round000corrected_polyDT.ome.tiff")
+    polyDT = stack.read_image(path)
+
+    rna_mip = stack.maximum_projection(polyDT)
+    print("\r shape: {0}".format(rna_mip.shape))
+    print("success")
 
     # n_rounds = 8
 
@@ -42,18 +51,18 @@ def main():
     #         print(f"Warning: no image data for tile {tile_idx} round {round_idx}; skipping")
     #         continue
 
-    filename = "tile"+str(tile_idx).zfill(3)+"round"+str(round_idx).zfill(3)+"corrected_polyDT.ome.tiff"
+    filename = "tile"+str(tile_idx).zfill(3)+"round"+str(round_idx).zfill(3)+"corrected_polyDT_mip.ome.tiff"
     filename_path = output_path / Path(filename)
     with TiffWriter(filename_path, bigtiff=True) as tif:
         metadata={
-            'axes': 'ZYX',
+            'axes': 'YX',
             'SignificantBits': 16,
-            'PhysicalSizeX': float(spacing_zyx_um[2]),
-            'PhysicalSizeXUnit': 'µm',
-            'PhysicalSizeY': float(spacing_zyx_um[1]),
-            'PhysicalSizeYUnit': 'µm',
-            'PhysicalSizeZ': float(spacing_zyx_um[0]),
-            'PhysicalSizeZUnit': 'µm',
+            # 'PhysicalSizeX': float(spacing_zyx_um[2]),
+            # 'PhysicalSizeXUnit': 'µm',
+            # 'PhysicalSizeY': float(spacing_zyx_um[1]),
+            # 'PhysicalSizeYUnit': 'µm',
+            # 'PhysicalSizeZ': float(spacing_zyx_um[0]),
+            # 'PhysicalSizeZUnit': 'µm',
         }
         options = dict(
             compression='zlib',
@@ -63,13 +72,13 @@ def main():
             resolutionunit='CENTIMETER',
         )
         tif.write(
-            round_data,
-            shape=round_data.shape,
-            dtype=round_data.dtype,
-            resolution=(
-                1e4 / float(spacing_zyx_um[2]),
-                1e4 / float(spacing_zyx_um[1])
-            ),
+            rna_mip,
+            shape=rna_mip.shape,
+            dtype=rna_mip.dtype,
+            # resolution=(
+            #     1e4 / float(spacing_zyx_um[2]),
+            #     1e4 / float(spacing_zyx_um[1])
+            # ),
             **options,
             metadata=metadata
         )
