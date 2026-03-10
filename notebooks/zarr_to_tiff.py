@@ -17,8 +17,7 @@ def main():
 
     for bit_idx in range(n_bits):
         bit_data = datastore.load_local_registered_image(tile=tile_idx,bit=bit_idx,return_future=False)
-
-        filename = "tile"+str(tile_idx).zfill(3)+"bit"+str(bit_idx).zfill(3)+".ome.tiff"
+        filename = "tile"+str(tile_idx).zfill(3)+"bit"+str(bit_idx+1).zfill(3)+".ome.tiff"
         filename_path = output_path / Path(filename)
         with TiffWriter(filename_path, bigtiff=True) as tif:
             metadata={
