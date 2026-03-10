@@ -70,6 +70,14 @@ path = os.path.join(path_output, "spots.csv")
 stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 # Summarize results
-summary = spots_df['bit'].value_counts().reset_index()
-summary = summary.rename(columns={'index' : 'bit', 'bit': 'fish_spots'})
-sorted = summary.sort_values(by='bit')
+# include all 16 bits even if one has zero spots
+summary = (
+    spots_df['bit']
+    .value_counts()
+    .reindex(range(1,17), fill_value=0)
+    .rename_axis('bit')
+    .reset_index(name='fish_spots')
+)
+
+path = os.path.join(path_output, "summary_spots.csv")
+stack.save_data_to_csv(summary, path, delimiter=',')
