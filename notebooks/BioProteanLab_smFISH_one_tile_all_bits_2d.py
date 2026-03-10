@@ -78,6 +78,26 @@ summary = (
     .rename_axis('bit')
     .reset_index(name='fish_spots')
 )
+# Gene IDs, in order of bit number
+gene_ids = ['Angpt1',
+    'Crmp1',
+    'Dcx',
+    'Hdac11',
+    'Itgam',
+    'Notch2',
+    'Ptch1',
+    'Serpine1',
+    'Shh',
+    'Slc1a3',
+    'Tcf12',
+    'Tek',
+    'Tgfb1',
+    'Tgfbi',
+    'Aif1',
+    'Nnat']
+
+
+summary['gene_id'] = gene_ids
 
 path = os.path.join(path_output, "summary_spots.csv")
 stack.save_data_to_csv(summary, path, delimiter=',')
