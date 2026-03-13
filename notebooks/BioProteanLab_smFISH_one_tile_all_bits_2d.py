@@ -39,27 +39,29 @@ for bit in range(1, n_bits + 1):
         voxel_size=(103, 103),  # in nanometer (one value per dimension yx)
         spot_radius=(150, 150))  # in nanometer (one value per dimension yx)
     
-    spots_df = pd.DataFrame(spots, columns=['y', 'x',])
+    try:
+        spots_post_decomposition, dense_regions, reference_spot = detection.decompose_dense(
+            image=rna_mip, 
+            spots=spots, 
+            voxel_size=(103, 103), 
+            spot_radius=(150, 150), 
+            alpha=0.7,  # alpha impacts the number of spots per candidate region
+            beta=1,  # beta impacts the number of candidate regions to decompose
+            gamma=5)  # gamma the filtering step to denoise the image
+        print("detected spots before decomposition")
+        print("\r shape: {0}".format(spots.shape))
+        print("detected spots after decomposition")
+        print("\r shape: {0}".format(spots_post_decomposition.shape))
+
+    except RuntimeError:
+        print(f"Decomposition failed for bit {bit}, using original spots")
+        spots_post_decomposition = spots
+
+    spots_df = pd.DataFrame(spots_post_decomposition, columns=['y', 'x',])
     spots_df['bit'] = bit
     # Append the dataframe of the spots to the list all_spots
     all_spots.append(spots_df)
     print(f'Done with bit {bit}')
-
-
-    # spots_post_decomposition, dense_regions, reference_spot = detection.decompose_dense(
-    #     image=rna_mip, 
-    #     spots=spots, 
-    #     voxel_size=(103, 103), 
-    #     spot_radius=(150, 150), 
-    #     alpha=0.7,  # alpha impacts the number of spots per candidate region
-    #     beta=1,  # beta impacts the number of candidate regions to decompose
-    #     gamma=5)  # gamma the filtering step to denoise the image
-    # print("detected spots before decomposition")
-    # print("\r shape: {0}".format(spots.shape))
-    # print("detected spots after decomposition")
-    # print("\r shape: {0}".format(spots_post_decomposition.shape))
-
-    # spots_df = pd.DataFrame(spots_post_decomposition, columns=['y', 'x',])
 
 # Concatenate the spots from all bits
 spots_df = pd.concat(all_spots, ignore_index=True)
@@ -79,7 +81,7 @@ summary = (
     .reset_index(name='fish_spots')
 )
 # Gene IDs, in order of bit number
-gene_ids = ['Angpt1',
+gene_names = ['Angpt1',
     'Crmp1',
     'Dcx',
     'Hdac11',
@@ -97,7 +99,7 @@ gene_ids = ['Angpt1',
     'Nnat']
 
 
-summary['gene_id'] = gene_ids
+summary['gene_name'] = gene_names
 
 path = os.path.join(path_output, "summary_spots.csv")
 stack.save_data_to_csv(summary, path, delimiter=',')
