@@ -12,9 +12,9 @@ def main():
     output_path.mkdir(parents=True, exist_ok=True)
     spacing_zyx_um = datastore.voxel_size_zyx_um
 
-    tile_idx = 0
+    n_tiles = 25
     n_bits = 16
-    for tile in range(n_tiles):
+    for tile_idx in range(n_tiles):
         for bit_idx in range(n_bits):
             bit_data = datastore.load_local_registered_image(tile=tile_idx,bit=bit_idx,return_future=False)
             filename = "tile"+str(tile_idx).zfill(3)+"bit"+str(bit_idx+1).zfill(3)+".ome.tiff"
