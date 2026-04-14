@@ -115,7 +115,7 @@ def global_register_data(
             )
 
             sim = si_utils.get_sim_from_array(
-                da.expand_dims(im_data, axis=0),
+                im_data,
                 dims=("c", "z", "y", "x"),
                 scale=scale,
                 translation=tile_grid_positions,
@@ -198,20 +198,20 @@ def global_register_data(
 
         del fused_msim
 
-        datastore.save_global_fidicual_image(
-            fused_image=fused_sim.data,
-            affine_zyx_um=affine,
-            origin_zyx_um=origin,
-            spacing_zyx_um=spacing,
-        )
+        # datastore.save_global_fidicual_image(
+        #     fused_image=fused_sim.data,
+        #     affine_zyx_um=affine,
+        #     origin_zyx_um=origin,
+        #     spacing_zyx_um=spacing,
+        # )
 
-        gc.collect()
+        # gc.collect()
 
-        # update datastore state
-        datastore_state = datastore.datastore_state
-        datastore_state.update({"GlobalRegistered": True})
-        datastore_state.update({"Fused": True})
-        datastore.datastore_state = datastore_state
+        # # update datastore state
+        # datastore_state = datastore.datastore_state
+        # datastore_state.update({"GlobalRegistered": True})
+        # datastore_state.update({"Fused": True})
+        # datastore.datastore_state = datastore_state
 
     # write OME-TIFF for BigFISH spot detection
         filename = "tile"+str(tile_idx).zfill(3)+"bit"+str(bit_idx+1).zfill(3)+".ome.tiff"
