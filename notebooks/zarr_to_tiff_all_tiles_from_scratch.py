@@ -28,9 +28,10 @@ def main():
     print("\nInitializing datastore...")
     datastore_path = root_path / Path(r"qi2labdatastore")
     datastore = qi2labDataStore(datastore_path)
-    # gene_ids = list(datastore.codebook["gene_id"])
-    # channel_ids = ["polyDT", *gene_ids]
-    # num_bits = datastore.num_bits
+
+    # obtain the list of genes
+    gene_ids = list(datastore.codebook["gene_id"])
+    channel_ids = ["polyDT", *gene_ids]
 
     # define shape of registered image using round 0 and a temporary variable
     im_data = datastore.load_local_registered_image(tile=0, round=0, return_future=False)
@@ -82,13 +83,13 @@ def main():
 
         # create spatial image for all channels in current tile
         sim = si_utils.get_sim_from_array(
-                    im_data,
-                    dims=("c", "z", "y", "x"),
-                    scale=scale,
-                    translation=tile_grid_positions,
-                    affine=affine_zyx_px,
-                    transform_key="stage_metadata",
-                )
+                im_data,
+                dims=("c", "z", "y", "x"),
+                scale=scale,
+                translation=tile_grid_positions,
+                affine=affine_zyx_px,
+                transform_key="stage_metadata",
+            )
         # convert to multiscale spatial image object and append to list for registration
         msim = msi_utils.get_msim_from_sim(sim, scale_factors=[])
         msims.append(msim)
@@ -110,6 +111,81 @@ def main():
             post_registration_do_quality_filter=True,
             n_parallel_pairwise_regs=20
         )
+
+
+    print("\nLazy loading and fusing full-resolution polyDT and readouts...")
+    tile_ids = datastore.tile_ids
+
+    for ch_id in tqdm(range(len(channel_ids)), desc="channel"):
+        msims_full = []
+        for tile_id, msim in enumerate(tqdm(msims, desc="tile")):
+            # parse the registered fidicual channel to get the registration metadata
+            affine = msi_utils.get_transform_from_msim(
+                msim, transform_key="affine_registered"
+            ).data.squeeze()
+            affine = np.round(affine, 2)
+            origin = si_utils.get_origin_from_sim(
+                msi_utils.get_sim_from_msim(msim), asarray=False
+            )
+            scale = si_utils.get_spacing_from_sim(
+                msi_utils.get_sim_from_msim(msim), asarray=False
+            )
+
+            # temporary variable for channel data
+            im_data = da.zeros(
+                (1, im_shape[0], im_shape[1], im_shape[2]), dtype=np.uint16
+            )
+
+            # lazy load tile data
+            tile_id = tile_ids[tile_id]
+
+            # lazy load deconvolved polyDT
+            if ch_id == 0:
+                input_path = (
+                    datastore_path
+                    / Path("polyDT")
+                    / Path(tile_id)
+                    / Path("round001.zarr")
+                )
+                im_data[0, :] = da.from_zarr(
+                    input_path, component="registered_decon_data"
+                ).astype(np.uint16)
+            # lazy load deconvolved * (u-fish prediction>0.25) readout bits
+            else:
+                input_path = (
+                    datastore_path
+                    / Path("readouts")
+                    / Path(tile_id)
+                    / Path("bit" + str(ch_id).zfill(3) + ".zarr")
+                )
+                im_data[0, :] = (
+                    da.from_zarr(input_path, component="registered_decon_data").astype(
+                        np.float32
+                    )
+                    * da.from_zarr(input_path, component="registered_ufish_data")
+                    .astype(np.float32)
+                    .clip(0.25, 1)
+                ).astype(np.uint16)
+
+            # create spatial image for all channels in current tile using registration metadata instead of stage metadata
+            # this uses different parameters than above - Why?
+            sim_full = si_utils.get_sim_from_array(
+                im_data,
+                dims=("c", "z", "y", "x"),
+                scale=scale,
+                translation=origin,
+                affine=affine,
+                transform_key="affine_registered",
+                c_coords=channel_ids[ch_id],
+            )
+
+            # convert to multiscale spatial image object and append to list for fusion
+            msim_full = msi_utils.get_msim_from_sim(sim_full, scale_factors=[])
+            msims_full.append(msim_full)
+            del im_data
+            gc.collect()
+
+    
 
 
 
