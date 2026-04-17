@@ -13,7 +13,7 @@ from pathlib import Path
 import gc
 from tqdm import tqdm
 from multiview_stitcher import spatial_image_utils as si_utils
-from multiview_stitcher import msi_utils, registration, fusion, ngff_utils
+from multiview_stitcher import msi_utils, registration, fusion
 import dask.diagnostics
 import dask.array as da
 import dask
@@ -179,24 +179,19 @@ def fuse_all_channels(root_path : Path):
     
         # create fused image object using previously calculated registration metadata and all channels
         print("Constructing fusion...")
-        with dask.diagnostics.ProgressBar():
-            fused = fusion.fuse(
-                [msi_utils.get_sim_from_msim(msim_full) for msim_full in msims_full],
-                transform_key='affine_registered',
-                output_chunksize=512,
-                overlap_in_pixels=64,
-                )
-    
         fused_path = root_path / Path("fused")
         fused_path.mkdir(exist_ok=True)
-        ome_output_path = fused_path / Path("ch"+str(ch_idx).zfill(2)+".ome.zarr")
-        print(f'Fusing views and saving output to {str(ome_output_path)}...')
+        ome_output_path = fused_path / Path("ch" + str(ch_idx).zfill(2) + ".ome.zarr")
+        print(f"Fusing views and saving output to {ome_output_path!s}...")
+
         with dask.diagnostics.ProgressBar():
-            fused = ngff_utils.write_sim_to_ome_zarr(
-                fused, 
-                str(ome_output_path),
-                overwrite=True,
-        )
+            fusion.fuse(
+                [msi_utils.get_sim_from_msim(msim_full) for msim_full in msims_full],
+                transform_key="affine_registered",
+                output_chunksize=512,
+                overlap_in_pixels=64,
+                output_zarr_url=str(ome_output_path),
+            )
           
 if __name__ == "__main__":
     root_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers")
