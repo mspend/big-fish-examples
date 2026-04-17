@@ -88,8 +88,8 @@ def fuse_all_channels(root_path : Path):
             dtype=np.uint16)
         
         input_path = datastore_path / Path("polyDT") / Path(tile_id) / Path("round001.zarr")
-        store = zarr.DirectoryStore(str(input_path))
-        im_data[0,:] = da.from_zarr(store, component="registered_decon_data").astype("uint16")
+        # store = zarr.DirectoryStore(str(input_path))
+        im_data[0,:] = da.from_zarr(input_path, component="registered_decon_data").astype("uint16")
         
 
         # create spatial image for all channels in current tile
@@ -199,5 +199,5 @@ def fuse_all_channels(root_path : Path):
         )
           
 if __name__ == "__main__":
-    root_path = Path(r"/mnt/data2/bioprotean/20250220_Bartelle_control_smFISH_TqIB")
+    root_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers")
     fuse_all_channels(root_path)
