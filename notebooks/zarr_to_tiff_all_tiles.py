@@ -13,16 +13,29 @@ import dask.diagnostics
 from multiview_stitcher import fusion, msi_utils, ngff_utils, registration
 from multiview_stitcher import spatial_image_utils as si_utils
 from pathlib import Path
+import argparse
 from tqdm import tqdm
 import gc
 import multiprocessing as mp
 from tifffile import TiffWriter
 from merfish3danalysis.qi2labDataStore import qi2labDataStore
 
-def main():
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Fuse channels and export per-channel OME-TIFFs."
+    )
+    parser.add_argument(
+        "root_path",
+        type=Path,
+        help="Root experiment folder (example: /data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers)",
+    )
+    return parser.parse_args()
+
+
+def main(root_path: Path):
 
     # input path
-    root_path = "/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers"
+    root_path = Path(root_path).expanduser().resolve()
 
     # initialize datastore
     print("\nInitializing datastore...")
@@ -243,4 +256,5 @@ def main():
 
 # This thing is necessary for code with multiprocessing when it spawns child processes
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args.root_path)
