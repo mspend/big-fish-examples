@@ -33,22 +33,22 @@ def main():
     output_path = datastore_path / "big_fish" / "tiffs"
     output_path.mkdir(parents=True, exist_ok=True)
 
-    # obtain the list of genes
+    # grab the list of genes from the datastore
     gene_ids = list(datastore.codebook["gene_id"])
     channel_ids = ["polyDT", *gene_ids]
 
-    # define shape of registered image using round 0 and a temporary variable
+    # define shape of registered image using round 0 and a temporary variable im_data
     im_data = datastore.load_local_registered_image(tile=0, round=0, return_future=False)
 
     im_shape = im_data.shape
     del im_data
 
-    # convert local tiles from first round to multiscale spatial images
+    # convert local tiles from first round (polyDT) to multiscale spatial images
     print("\nLazy loading fiducial channel...")
 
     # msims is a list that holds the MultiscaleSpatialImages
-    # one for each tile
-    # contains image data and metadata like coodinate system, voxel spacing, and transformation information
+    # there is one multiscale spatial image for each tile
+    # it contains image data and metadata like coodinate system, voxel spacing, and transformation information
 
     msims = []
     for _, tile_id in enumerate(tqdm(datastore.tile_ids, desc="tile")):
@@ -75,7 +75,7 @@ def main():
         # im_data has shape ("c", "z", "y", "x")
         im_data = da.zeros((1, im_shape[0], im_shape[1], im_shape[2]), dtype=np.uint16)
 
-        #  Find the Zarr file for this tile's fiducial channel, load the deconvolved data from it, and put it into the first channel of your multi-channel image array.
+        # find the Zarr file for this tile's fiducial channel, load the deconvolved data from it, and put it into the first channel of your multi-channel image array.
 
         # construct the file path
         input_path = (datastore_path / Path("polyDT") / Path(tile_id) / Path("round001.zarr"))
@@ -100,10 +100,7 @@ def main():
         del im_data
         gc.collect()
 
-    # print(len(msims))
-    # print(msims)
-
-    # perform registration
+    # perform global registration
     print("\nPerforming registration...")
     with dask.diagnostics.ProgressBar():
         _ = registration.register(
@@ -116,6 +113,7 @@ def main():
             n_parallel_pairwise_regs=20
         )
 
+    # load the channel data and prepare for writing out to disk
 
     print("\nLazy loading and fusing full-resolution polyDT and readouts...")
     tile_ids = datastore.tile_ids
@@ -200,10 +198,7 @@ def main():
                 overlap_in_pixels=64,
             )
 
-        # directly fuse the images to disk as ome-zarr.
-        #  write it out at full resolution instead of the coarsed-array that we normally use for the fidicual array.
-        #  you can load the fused ome-zarr back into memory, split into individual TIFFs, and write them each out.
-
+        #  write out each channel as a tiff file
         filename = "fused_"+"bit"+str(ch_id+1).zfill(3)+".ome.tiff"
         filename_path = output_path / Path(filename)
 
@@ -226,19 +221,11 @@ def main():
                 resolutionunit='CENTIMETER',
             )
 
-            print(fused.shape)
-            print(fused.dtype)
-            # (1, 1, 69, 10095, 10119)
-            # uint16
-
-            # COMPUTE the dask array to numpy BEFORE writing
+            # convert the dask array to numpy BEFORE writing
             fused_computed = fused.compute()
 
-            print(fused_computed.shape)
-            print(fused_computed.dtype)
-
+            # the image data is stored in the last three columns of the array, zyx
             fused_zyx = fused_computed[0, 0, :, :, :]
-            print(fused_zyx.shape)
 
             tif.write(
                 fused_zyx,
