@@ -225,11 +225,22 @@ def main():
                 resolutionunit='CENTIMETER',
             )
 
+            print(fused.shape)
+            print(fused.dtype)
+            # (1, 1, 69, 10095, 10119)
+            # uint16
+
             # COMPUTE the dask array to numpy BEFORE writing
             fused_computed = fused.compute()
 
+            print(fused_computed.shape)
+            print(fused_computed.dtype)
+
+            fused_zyx = fused_computed[0, 0, :, :, :]
+            print(fused_zyx.shape)
+
             tif.write(
-                fused_computed,
+                fused_zyx,
                 resolution=(
                     1e4 / float(voxel_zyx_um[2]),
                     1e4 / float(voxel_zyx_um[1])
