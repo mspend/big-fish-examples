@@ -2,6 +2,7 @@
 Fuse all channels into individual ome-ngff v0.4 for viewing.
 
 Shepherd 2025/03 - created script.
+Spendlove 2026/04 - 
 """
 
 import numpy as np
@@ -23,12 +24,12 @@ def main():
     # input path
     root_path = "/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers"
 
-    # load datastore
     # initialize datastore
     print("\nInitializing datastore...")
     datastore_path = root_path / Path(r"qi2labdatastore")
     datastore = qi2labDataStore(datastore_path)
 
+    # define output path
     output_path = datastore_path / "big_fish" / "tiffs"
     output_path.mkdir(parents=True, exist_ok=True)
 
