@@ -49,6 +49,8 @@ def main(root_path: Path):
     # grab the list of genes from the datastore
     gene_ids = list(datastore.codebook["gene_id"])
     channel_ids = ["polyDT", *gene_ids]
+    print(gene_ids)
+    print(channel_ids)
 
     # define shape of registered image using round 0 and a temporary variable im_data
     im_data = datastore.load_local_registered_image(tile=0, round=0, return_future=False)
@@ -212,7 +214,10 @@ def main(root_path: Path):
             )
 
         #  write out each channel as a tiff file
-        filename = "fused_"+"bit"+str(ch_id+1).zfill(3)+".ome.tiff"
+        if ch_id == 0:
+            filename = "fused_"+"polyDT"+".ome.tiff"
+        else:
+            filename = "fused_"+"bit"+str(ch_id).zfill(3)+".ome.tiff"
         filename_path = output_path / Path(filename)
 
         with TiffWriter(filename_path, bigtiff=True) as tif:
