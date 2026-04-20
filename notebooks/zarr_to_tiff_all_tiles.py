@@ -259,7 +259,6 @@ def main(root_path: Path):
     print("done")
 
 
-# This thing is necessary for code with multiprocessing when it spawns child processes
 if __name__ == "__main__":
     args = parse_args()
     main(args.root_path)
