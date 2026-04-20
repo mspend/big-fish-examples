@@ -45,9 +45,10 @@ def main(root_path: Path):
     # took about a minute to load
     path = os.path.join(input_dir, "fused_bit005.ome.tiff")
     rna = stack.read_image(path)
-    rna = rna.astype(np.uint16)
+
 
     rna_mip = stack.maximum_projection(rna)
+    # rna = rna.astype(np.uint16)
     
     print("smfish channel")
     print("\r shape: {0}".format(rna.shape))
