@@ -11,80 +11,101 @@ from skimage import segmentation
 import matplotlib.patches as mpatches
 from scipy import ndimage
 from pathlib import Path
+import argparse
 print("Big-FISH version: {0}".format(bigfish.__version__))
 
-# Change for your data
-data = Path("/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers")
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Fuse channels and export per-channel OME-TIFFs."
+    )
+    parser.add_argument(
+        "root_path",
+        type=Path,
+        help="Root experiment folder (example: /data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers)",
+    )
+    return parser.parse_args()
 
-input_dir = data / "qi2labdatastore" / "big_fish" / "tiffs"
-output_dir = data / "qi2labdatastore" / "big_fish" / "results" / "all_tiles_3D"
-segmentation = data / "qi2labdatastore" / "segmentation" / "cellpose"
+def main(root_path: Path):
 
-metadata = data / "scan_metadata.csv"
+    root_path = Path(root_path).expanduser().resolve()
 
-# Create output directory if needed
-output_dir.mkdir(parents=True, exist_ok=True)
+    input_dir = root_path / "qi2labdatastore" / "big_fish" / "tiffs"
+    output_dir = root_path / "qi2labdatastore" / "big_fish" / "results" / "all_tiles_3D"
+    segmentation = root_path / "qi2labdatastore" / "segmentation" / "cellpose"
 
-# Load in data 
+    metadata = root_path / "scan_metadata.csv"
 
-# These tiffs are the registered, deconvolved image
-path = os.path.join(input_dir, "fused_bit001.ome.tiff")
-rna = stack.read_image(path)
-print("smfish channel")
-print("\r shape: {0}".format(rna.shape))
-print("\r dtype: {0}".format(rna.dtype))
+    # Create output directory if needed
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-# polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
-# Segmentation is performed on the 3D polyDT data using Cellpose
-# We load in Cellpose masks to visualize the cell boundaries.
-path = os.path.join(segmentation, "polyDT_max_projection.ome.tiff")
-polyDT_masks = stack.read_image(path)
-print("polyDT channel")
-print("\r shape: {0}".format(polyDT_masks.shape))
-print("\r dtype: {0}".format(polyDT_masks.dtype), "\n")
+    print("done")
 
-metadata = pd.read_csv(metadata, index_col=0)
 
-# Obtain camera metadata
-# NA stands for numerical aperture
-# provide voxel size in nanometer
-na = metadata['na'][0]
-z_voxel = metadata['z_voxel_um'][0] * 1000 # in nanometer
-yx_voxel = metadata['yx_voxel_um'][0] * 1000 # in nanometer
+    # Load in data 
 
-# Wavelengths of the channels
-lambda_red = 670 # Alexa647
-lambda_yellow = 590 # Atto565
+    # # These tiffs are the registered, deconvolved image
+    # path = os.path.join(input_dir, "fused_bit001.ome.tiff")
+    # rna = stack.read_image(path)
+    # print("smfish channel")
+    # print("\r shape: {0}".format(rna.shape))
+    # print("\r dtype: {0}".format(rna.dtype))
 
-print(yx_voxel)
-print(z_voxel)
+    # # polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
+    # # Segmentation is performed on the 3D polyDT data using Cellpose
+    # # We load in Cellpose masks to visualize the cell boundaries.
+    # path = os.path.join(segmentation, "polyDT_max_projection.ome.tiff")
+    # polyDT_masks = stack.read_image(path)
+    # print("polyDT channel")
+    # print("\r shape: {0}".format(polyDT_masks.shape))
+    # print("\r dtype: {0}".format(polyDT_masks.dtype), "\n")
 
-voxel_size = [z_voxel, yx_voxel, yx_voxel]
+    # metadata = pd.read_csv(metadata, index_col=0)
 
-# Calculated using Abbe’s diffraction formula for lateral (XY) resolution is: d = λ/(2NA)
-# Abbe’s diffraction formula for axial (Z) resolution is: d = 2λ/(NA)2
-spot_radius_xy = (lambda_yellow / (2 * na))
-spot_radius_z = (2* lambda_yellow / (2 * na))
-spot_radius = [spot_radius_z, spot_radius_xy, spot_radius_xy]
+    # # Obtain camera metadata
+    # # NA stands for numerical aperture
+    # # provide voxel size in nanometer
+    # na = metadata['na'][0]
+    # z_voxel = metadata['z_voxel_um'][0] * 1000 # in nanometer
+    # yx_voxel = metadata['yx_voxel_um'][0] * 1000 # in nanometer
 
-print(voxel_size)
-print(spot_radius)
+    # # Wavelengths of the channels
+    # lambda_red = 670 # Alexa647
+    # lambda_yellow = 590 # Atto565
 
-# Detect spots in 3D 
-# Detection in 3D takes ~5 minutes
-# Does not use the polyDT channel
-spots, threshold = detection.detect_spots(
-    images=rna, 
-    return_threshold=True, 
-    voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
-    spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
+    # print(yx_voxel)
+    # print(z_voxel)
 
-# The function detect_spots returns the coordinates (or list of coordinates) 
-# of the spots with shape (nb_spots, 3) for 3D images.
-print("detected spots")
-print("\r shape: {0}".format(spots.shape))
-print("\r dtype: {0}".format(spots.dtype))
-print("\r threshold: {0}".format(threshold))
+    # voxel_size = [z_voxel, yx_voxel, yx_voxel]
 
-spots_df = pd.DataFrame(spots, columns=["z", "y", "x"])
-print(spots_df.head())
+    # # Calculated using Abbe’s diffraction formula for lateral (XY) resolution is: d = λ/(2NA)
+    # # Abbe’s diffraction formula for axial (Z) resolution is: d = 2λ/(NA)2
+    # spot_radius_xy = (lambda_yellow / (2 * na))
+    # spot_radius_z = (2* lambda_yellow / (2 * na))
+    # spot_radius = [spot_radius_z, spot_radius_xy, spot_radius_xy]
+
+    # print(voxel_size)
+    # print(spot_radius)
+
+    # # Detect spots in 3D 
+    # # Detection in 3D takes ~5 minutes
+    # # Does not use the polyDT channel
+    # spots, threshold = detection.detect_spots(
+    #     images=rna, 
+    #     return_threshold=True, 
+    #     voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
+    #     spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
+
+    # # The function detect_spots returns the coordinates (or list of coordinates) 
+    # # of the spots with shape (nb_spots, 3) for 3D images.
+    # print("detected spots")
+    # print("\r shape: {0}".format(spots.shape))
+    # print("\r dtype: {0}".format(spots.dtype))
+    # print("\r threshold: {0}".format(threshold))
+
+    # spots_df = pd.DataFrame(spots, columns=["z", "y", "x"])
+    # print(spots_df.head())
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args.root_path)
