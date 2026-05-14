@@ -43,9 +43,10 @@ def main(root_path: Path):
     # These tiffs are the registered, deconvolved image
     path = os.path.join(input_dir, "fused_bit005.ome.tiff")
     rna = stack.read_image(path)
-
-    rna_mip = stack.maximum_projection(rna)
     # rna = rna.astype(np.uint16)
+
+    # create z-maxiumum projection
+    rna_mip = stack.maximum_projection(rna)
 
     # # polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
     # # Segmentation is performed on the 3D polyDT data using Cellpose
