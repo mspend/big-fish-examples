@@ -31,7 +31,7 @@ def main(root_path: Path):
     root_path = Path(root_path).expanduser().resolve()
 
     input_dir = root_path / "qi2labdatastore" / "big_fish" / "tiffs"
-    output_dir = root_path / "qi2labdatastore" / "big_fish" / "results" / "all_tiles_3D"
+    output_dir = root_path / "qi2labdatastore" / "big_fish" / "results" / "all_tiles_2D"
     segmentation = root_path / "qi2labdatastore" / "segmentation" / "cellpose"
     metadata_dir = root_path / "scan_metadata.csv"
 
@@ -47,6 +47,7 @@ def main(root_path: Path):
 
     # create z-maxiumum projection
     rna_mip = stack.maximum_projection(rna)
+    print("Data loaded")
 
     # # polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
     # # Segmentation is performed on the 3D polyDT data using Cellpose
@@ -107,6 +108,16 @@ def main(root_path: Path):
 
     print(f"spot detection time: {end - start:.6f} seconds")
 
+    # save results
+    # save in npy files
+    path = os.path.join(output_dir, "bit5_spots.npy")
+    stack.save_array(spots, path)
+
+    # save in csv files
+    # The header of the csv file is y, x, cluster identity #
+    spots_df = pd.DataFrame(spots, columns=['y', 'x'])
+    path = os.path.join(output_dir, "bit5_spots.csv")
+    stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 if __name__ == "__main__":
     args = parse_args()

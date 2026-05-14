@@ -44,6 +44,7 @@ def main(root_path: Path):
     path = os.path.join(input_dir, "fused_bit005.ome.tiff")
     rna = stack.read_image(path)
     rna = rna.astype(np.uint16)
+    print("Data loaded")
   
     # # polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
     # # Segmentation is performed on the 3D polyDT data using Cellpose
@@ -103,6 +104,17 @@ def main(root_path: Path):
     print(spots_df.head())
 
     print(f"spot detection time: {end - start:.6f} seconds")
+
+    # save results
+    # save in npy files
+    path = os.path.join(output_dir, "bit5_spots.npy")
+    stack.save_array(spots, path)
+
+    # save in csv files
+    # The header of the csv file is y, x, cluster identity #
+    spots_df = pd.DataFrame(spots, columns=['y', 'x'])
+    path = os.path.join(output_dir, "bit5_spots.csv")
+    stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 
 if __name__ == "__main__":
