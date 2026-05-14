@@ -33,8 +33,7 @@ def main(root_path: Path):
     input_dir = root_path / "qi2labdatastore" / "big_fish" / "tiffs"
     output_dir = root_path / "qi2labdatastore" / "big_fish" / "results" / "all_tiles_3D"
     segmentation = root_path / "qi2labdatastore" / "segmentation" / "cellpose"
-
-    metadata = root_path / "scan_metadata.csv"
+    metadata_dir = root_path / "scan_metadata.csv"
 
     # Create output directory if needed
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -42,14 +41,10 @@ def main(root_path: Path):
     # Load in data 
 
     # These tiffs are the registered, deconvolved image
-    # took about a minute to load
     path = os.path.join(input_dir, "fused_bit005.ome.tiff")
     rna = stack.read_image(path)
     rna = rna.astype(np.uint16)
-    print("smfish channel")
-    print("\r shape: {0}".format(rna.shape))
-    print("\r dtype: {0}".format(rna.dtype))
-
+  
     # # polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
     # # Segmentation is performed on the 3D polyDT data using Cellpose
     # # We load in Cellpose masks to visualize the cell boundaries.
@@ -59,7 +54,7 @@ def main(root_path: Path):
     # print("\r shape: {0}".format(polyDT_masks.shape))
     # print("\r dtype: {0}".format(polyDT_masks.dtype), "\n")
 
-    metadata = pd.read_csv(metadata, index_col=0)
+    metadata = pd.read_csv(metadata_dir, index_col=0)
 
     # Obtain camera metadata
     # NA stands for numerical aperture
