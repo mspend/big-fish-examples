@@ -111,8 +111,6 @@ def main(root_path: Path):
     stack.save_array(spots, path)
 
     # save in csv files
-    # The header of the csv file is y, x, cluster identity #
-    spots_df = pd.DataFrame(spots, columns=['y', 'x'])
     path = os.path.join(output_dir, "bit5_spots.csv")
     stack.save_data_to_csv(spots_df, path, delimiter=',')
 
