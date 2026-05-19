@@ -44,16 +44,10 @@ def main(root_path: Path):
     path = os.path.join(input_dir, "fused_bit005.ome.tiff")
     rna = stack.read_image(path)
     rna = rna.astype(np.uint16)
+    print("\r shape: {0}".format(rna.shape))
+    print("\r dtype: {0}".format(rna.dtype))
     print("Data loaded")
   
-    # # polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
-    # # Segmentation is performed on the 3D polyDT data using Cellpose
-    # # We load in Cellpose masks to visualize the cell boundaries.
-    # path = os.path.join(segmentation, "polyDT_max_projection.ome.tiff")
-    # polyDT_masks = stack.read_image(path)
-    # print("polyDT channel")
-    # print("\r shape: {0}".format(polyDT_masks.shape))
-    # print("\r dtype: {0}".format(polyDT_masks.dtype), "\n")
 
     metadata = pd.read_csv(metadata_dir, index_col=0)
 
@@ -100,9 +94,6 @@ def main(root_path: Path):
     print("\r dtype: {0}".format(spots.dtype))
     print("\r threshold: {0}".format(threshold))
 
-    # spots_df = pd.DataFrame(spots, columns=["z", "y", "x"])
-    # print(spots_df.head())
-
     print(f"spot detection time: {end - start:.6f} seconds")
 
     # save results
@@ -111,6 +102,8 @@ def main(root_path: Path):
     stack.save_array(spots, output_path)
 
     # # save in csv files
+    # spots_df = pd.DataFrame(spots, columns=["z", "y", "x"])
+    # print(spots_df.head())
     # path = os.path.join(output_dir, "bit5_spots.csv")
     # stack.save_data_to_csv(spots_df, path, delimiter=',')
 

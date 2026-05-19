@@ -49,15 +49,6 @@ def main(root_path: Path):
     rna_mip = stack.maximum_projection(rna)
     print("Data loaded")
 
-    # # polyDT is our fiducial, or reference marker. This probe labels all polyadenylated RNA.
-    # # Segmentation is performed on the 3D polyDT data using Cellpose
-    # # We load in Cellpose masks to visualize the cell boundaries.
-    # path = os.path.join(segmentation, "polyDT_max_projection.ome.tiff")
-    # polyDT_masks = stack.read_image(path)
-    # print("polyDT channel")
-    # print("\r shape: {0}".format(polyDT_masks.shape))
-    # print("\r dtype: {0}".format(polyDT_masks.dtype), "\n")
-
     metadata = pd.read_csv(metadata_dir, index_col=0)
 
     # Obtain camera metadata
