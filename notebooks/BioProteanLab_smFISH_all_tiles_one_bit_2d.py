@@ -103,21 +103,21 @@ def main(root_path: Path):
     print("\r dtype: {0}".format(spots.dtype))
     print("\r threshold: {0}".format(threshold))
 
-    spots_df = pd.DataFrame(spots, columns=["y", "x"])
-    print(spots_df.head())
+    # spots_df = pd.DataFrame(spots, columns=["y", "x"])
+    # print(spots_df.head())
 
     print(f"spot detection time: {end - start:.6f} seconds")
 
     # save results
     # save in npy files
-    path = os.path.join(output_dir, "bit5_spots.npy")
-    stack.save_array(spots, path)
+    output_path = os.path.join(output_dir, "bit5_spots.npy")
+    stack.save_array(spots, output_path)
 
-    # save in csv files
-    # The header of the csv file is y, x, cluster identity #
-    spots_df = pd.DataFrame(spots, columns=['y', 'x'])
-    path = os.path.join(output_dir, "bit5_spots.csv")
-    stack.save_data_to_csv(spots_df, path, delimiter=',')
+    # # save in csv files
+    # # The header of the csv file is y, x, cluster identity #
+    # spots_df = pd.DataFrame(spots, columns=['y', 'x'])
+    # path = os.path.join(output_dir, "bit5_spots.csv")
+    # stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 if __name__ == "__main__":
     args = parse_args()
