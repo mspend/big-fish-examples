@@ -71,50 +71,52 @@ def main(root_path: Path):
     for bit in range(1, n_bits + 1):
 
         # Load in data 
-
-        # These tiffs are the registered, deconvolved image
+        # These tiffs are the globally registered, deconvolved image
         path = os.path.join(input_dir, "fused_bit" +str(bit).zfill(3) + ".ome.tiff")
         rna = stack.read_image(path)
-        rna = rna.astype(np.uint16)
+        # rna = rna.astype(np.uint16)
         print(f"Bit {bit} loaded")
-  
-    #     # # Detect spots in 3D 
-    #     # # Detection in 3D takes ~5 minutes
-    #     # # Does not use the polyDT channel
-    #     # spots, threshold = detection.detect_spots(
-    #     #     images=rna, 
-    #     #     return_threshold=True, 
-    #     #     voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
-    #     #     spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
 
-    #     # The function detect_spots returns the coordinates (or list of coordinates) 
-    #     # of the spots with shape (nb_spots, 3) for 3D images.
-    #     print("detected spots")
+        if bit % 2 == 1: 
+            spot_radius = lambda_yellow / (2 * na) / 2 
+
+        if bit % 2 == 0: 
+            spot_radius = lambda_red / (2 * na) / 2   
+  
+        # Detect spots in 3D 
+        spots, threshold = detection.detect_spots(
+            images=rna, 
+            return_threshold=True, 
+            voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
+            spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
+
+        # The function detect_spots returns the coordinates (or list of coordinates) 
+        # of the spots with shape (nb_spots, 3) for 3D images.
+        print(f"Spot detection for bit {bit} complete")
+
     #     print("\r shape: {0}".format(spots.shape))
     #     print("\r dtype: {0}".format(spots.dtype))
     #     print("\r threshold: {0}".format(threshold))
 
-    #     # print(f"spot detection time: {end - start:.6f} seconds")
+        spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x',])
+        spots_df['bit'] = bit
+        # Append the dataframe of the spots to the list all_spots
+        all_spots.append(spots_df)
+        print(f'Done with bit {bit}')
 
-    #     spots_df = pd.DataFrame(spots, columns=['y', 'x',])
-    #     spots_df['bit'] = bit
-    #     # Append the dataframe of the spots to the list all_spots
-    #     all_spots.append(spots_df)
-    #     print(f'Done with bit {bit}')
+    # Concatenate the spots from all bits
+    spots_df = pd.concat(all_spots, ignore_index=True)
 
-    # # Concatenate the spots from all bits
-    # spots_df = pd.concat(all_spots, ignore_index=True)
+    # # save results
+    # # save in npy files
+    # output_path = os.path.join(output_dir, "bit5_spots.npy")
+    # stack.save_array(spots, output_path)
 
-    # # # save results
-    # # # save in npy files
-    # # output_path = os.path.join(output_dir, "bit5_spots.npy")
-    # # stack.save_array(spots, output_path)
-
-    # # save in csv files
-    # spots_df = pd.DataFrame(spots, columns=["z", "y", "x"])
-    # print(spots_df.head())
-    # path = os.path.join(output_dir, "bit5_spots.csv")
-    # stack.save_data_to_csv(spots_df, path, delimiter=',')
+    # save in csv files
+    spots_df = pd.DataFrame(spots, columns=["z", "y", "x"])
+    print(spots_df.head())
+    path = os.path.join(output_dir, "spots_all_bits.csv")
+    stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 
 if __name__ == "__main__":
