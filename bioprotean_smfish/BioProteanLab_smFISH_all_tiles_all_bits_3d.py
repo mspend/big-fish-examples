@@ -56,9 +56,9 @@ def main(root_path: Path):
 
     # Calculated using Abbe’s diffraction formula for lateral (XY) resolution is: d = λ/(2NA)
     # Abbe’s diffraction formula for axial (Z) resolution is: d = 2λ/(NA)2
-    spot_radius_xy = (lambda_yellow / (2 * na))
+    spot_radius_yx = (lambda_yellow / (2 * na))
     spot_radius_z = (2* lambda_yellow / (2 * na))
-    spot_radius = [spot_radius_z, spot_radius_xy, spot_radius_xy]
+    spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
 
     n_bits = 16
 
