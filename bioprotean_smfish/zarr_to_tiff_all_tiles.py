@@ -180,7 +180,7 @@ def main(root_path: Path):
                 translation=origin,
                 affine=affine,
                 transform_key="affine_registered",
-                c_coords=channel_ids[ch_id],
+                c_coords=[channel_ids[ch_id]],
             )
 
             # convert to multiscale spatial image object and append to list for fusion
