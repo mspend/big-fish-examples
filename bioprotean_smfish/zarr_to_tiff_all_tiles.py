@@ -93,10 +93,15 @@ def main(root_path: Path):
         # find the Zarr file for this tile's fiducial channel, load the deconvolved data from it, and put it into the first channel of your multi-channel image array.
 
         # construct the file path
-        input_path = datastore_path / "fiducial" / tile_id / "round001" / "registered_decon_data.ome.zarr"
-
+        input_path = (
+            datastore_path
+            / Path("fiducial")
+            / Path(tile_id)
+            / Path("round001")
+            / Path("registered_decon_data.ome.zarr")
+        )
         # load image data from zarr file
-        im_data[0, :] = da.from_zarr(input_path / "0")
+        im_data[0, :] = da.from_zarr(str(input_path)).astype(np.uint16)
 
         # create spatial image for all channels in current tile
         sim = si_utils.get_sim_from_array(
@@ -156,20 +161,32 @@ def main(root_path: Path):
 
             # lazy load deconvolved polyDT
             if ch_id == 0:
-                input_path = datastore_path / "fiducial" / tile_id / "round001" / "registered_decon_data.ome.zarr"
-
-                im_data[0, :] = da.from_zarr(input_path / "0")
+                input_path = (
+                    datastore_path
+                    / Path("fiducial")
+                    / Path(tile_id)
+                    / Path("round001")
+                    / Path("registered_decon_data.ome.zarr")
+                )
+                im_data[0, :] = da.from_zarr(str(input_path)).astype(np.uint16)
 
 
             # lazy load deconvolved * (u-fish prediction>0.25) readout bits
             else:
-                input_path = datastore_path / "readouts" / tile_id / Path("bit" + str(ch_id).zfill(3) + ".zarr") / "registered_decon_data.ome.zarr"
-
+                input_path = (
+                    datastore_path
+                    / Path("readouts")
+                    / Path(tile_id)
+                    / Path("bit" + str(ch_idx).zfill(3))
+                )
+                decon_path = input_path / Path("registered_decon_data.ome.zarr")
+                predictor_path = input_path / Path(
+                    "registered_feature_predictor_data.ome.zarr"
+                )
                 im_data[0, :] = (
-                        da.from_zarr(input_path / "0")
-                        * da.from_zarr(input_path, component="registered_feature_predictor_data")
-                        .astype(np.float32)
-                        .clip(0.25, 1)).astype(np.uint16)
+                    da.from_zarr(str(decon_path)).astype(np.float32)
+                    * da.from_zarr(str(predictor_path)).astype(np.float32).clip(0.25, 1)
+                ).astype(np.uint16)
 
             # create spatial image for all channels in current tile using registration metadata instead of stage metadata
             # this uses different parameters than above - Why?
