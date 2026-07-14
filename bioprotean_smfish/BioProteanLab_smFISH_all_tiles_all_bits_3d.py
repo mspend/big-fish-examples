@@ -13,7 +13,6 @@ from scipy import ndimage
 from pathlib import Path
 import argparse
 import time
-print("Big-FISH version: {0}".format(bigfish.__version__))
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -30,35 +29,27 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_dir = root_path / "qi2labdatastore" / "big_fish" / "tiffs"
-    output_dir = root_path / "qi2labdatastore" / "big_fish" / "results" / "all_tiles_3D"
-    segmentation = root_path / "qi2labdatastore" / "segmentation" / "cellpose"
-    metadata_dir = root_path / "scan_metadata.csv"
+    input_dir = root_path / "fused"
+    output_dir = root_path / "big_fish" / "results" / "all_tiles_3D"
+    # segmentation = root_path / "qi2labdatastore" / "segmentation" / "cellpose"
 
     # Create output directory if needed
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    metadata_dir = root_path / "scan_metadata.csv"
     metadata = pd.read_csv(metadata_dir, index_col=0)
 
     # Obtain camera metadata
-    # NA stands for numerical aperture
+    # NA = numerical aperture
     # provide voxel size in nanometer
     na = metadata['na'][0]
     z_voxel = metadata['z_voxel_um'][0] * 1000 # in nanometer
     yx_voxel = metadata['yx_voxel_um'][0] * 1000 # in nanometer
+    voxel_size = [z_voxel, yx_voxel, yx_voxel]
 
     # Wavelengths of the channels
     lambda_red = 670 # Alexa647
     lambda_yellow = 590 # Atto565
-
-
-    voxel_size = [z_voxel, yx_voxel, yx_voxel]
-
-    # Calculated using Abbe’s diffraction formula for lateral (XY) resolution is: d = λ/(2NA)
-    # Abbe’s diffraction formula for axial (Z) resolution is: d = 2λ/(NA)2
-    spot_radius_yx = (lambda_yellow / (2 * na))
-    spot_radius_z = (2* lambda_yellow / (2 * na))
-    spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
 
     n_bits = 16
 
@@ -72,16 +63,25 @@ def main(root_path: Path):
 
         # Load in data 
         # These tiffs are the globally registered, deconvolved image
-        path = os.path.join(input_dir, "fused_bit" +str(bit).zfill(3) + ".ome.tiff")
+        path = os.path.join(input_dir, "bit" +str(bit).zfill(3) + ".ome.tiff")
         rna = stack.read_image(path)
         # rna = rna.astype(np.uint16)
         print(f"Bit {bit} loaded")
 
+        # Spot radius calculated using Abbe’s diffraction formula for lateral (XY) resolution is: d = λ/(2NA)
+        # Abbe’s diffraction formula for axial (Z) resolution is: d = 2λ/(NA)2
+
         if bit % 2 == 1: 
-            spot_radius = lambda_yellow / (2 * na) / 2 
+            spot_radius_yx = (lambda_yellow / (2 * na))
+            spot_radius_z = (2* lambda_yellow / (2 * na))
+            spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
 
         if bit % 2 == 0: 
-            spot_radius = lambda_red / (2 * na) / 2   
+            spot_radius_yx = (lambda_red  / (2 * na))
+            spot_radius_z = (2* lambda_red  / (2 * na))
+            spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
+
+        print(spot_radius)
   
         # Detect spots in 3D 
         spots, threshold = detection.detect_spots(
