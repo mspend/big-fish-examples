@@ -1,15 +1,36 @@
 # packages availabe in merfish3d environment
 # this makes one tiff file for each bit in the tile.
+# takes ~2 minutes
 
 from merfish3danalysis.qi2labDataStore import qi2labDataStore
 from tifffile import TiffWriter
 from pathlib import Path
+import argparse
 
-def main():
-    datastore_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore")
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Fuse channels and export per-channel OME-TIFFs."
+    )
+    parser.add_argument(
+        "root_path",
+        type=Path,
+        help="Root experiment folder (example: /data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers)",
+    )
+    return parser.parse_args()
+
+def main(root_path: Path):
+    # input path
+    root_path = Path(root_path).expanduser().resolve()
+
+    # initialize datastore
+    print("\nInitializing datastore...")
+    datastore_path = root_path / Path(r"qi2labdatastore")
     datastore = qi2labDataStore(datastore_path)
-    output_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/big_fish")
+
+    # define output path   
+    output_path = root_path / "big_fish" / "tiffs"
     output_path.mkdir(parents=True, exist_ok=True)
+
     spacing_zyx_um = datastore.voxel_size_zyx_um
 
     tile_idx = 0
@@ -48,4 +69,5 @@ def main():
             )
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args.root_path)
