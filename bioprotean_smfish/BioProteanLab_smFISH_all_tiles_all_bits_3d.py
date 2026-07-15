@@ -29,7 +29,7 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_dir = root_path / "fused"
+    input_dir = root_path / "big_fish" / "tiffs"
     output_dir = root_path / "big_fish" / "results" / "all_tiles_3D"
 
     # Create output directory if needed
@@ -58,11 +58,11 @@ def main(root_path: Path):
     print("ready for spot detection")
 
     # because range is exclusive of the stop
-    for bit in range(1, n_bits + 1):
+    for bit in range(1, 3):
 
         # Load in data 
         # These tiffs are the globally registered, deconvolved image
-        path = os.path.join(input_dir, "bit" +str(bit).zfill(3) + ".ome.tiff")
+        path = os.path.join(input_dir, "tile000bit" +str(bit).zfill(3) + ".ome.tiff")
         rna = stack.read_image(path)
         # rna = rna.astype(np.uint16)
         print(f"Bit {bit} loaded")
@@ -93,19 +93,24 @@ def main(root_path: Path):
         # of the spots with shape (nb_spots, 3) for 3D images.
         print(f"Spot detection for bit {bit} complete")
 
-    #     print("\r shape: {0}".format(spots.shape))
-    #     print("\r dtype: {0}".format(spots.dtype))
-    #     print("\r threshold: {0}".format(threshold))
+        print("\r shape: {0}".format(spots.shape))
+        print("\r dtype: {0}".format(spots.dtype))
+        print("\r threshold: {0}".format(threshold))
 
         spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x'])
         print(spots_df)
         spots_df['bit'] = bit
+        print(spots_df)
+
         # Append the dataframe of the spots to the list all_spots
         all_spots.append(spots_df)
+        print(all_spots)
         print(f'Done with bit {bit}')
 
+    print(all_spots)
     # Concatenate the spots from all bits
     spots_df = pd.concat(all_spots, ignore_index=True)
+    print(spots_df)
 
     # # save results
     # # save in npy files
@@ -113,7 +118,7 @@ def main(root_path: Path):
     # stack.save_array(spots, output_path)
 
     # save in csv files
-    path = os.path.join(output_dir, "spots_all_bits.csv")
+    path = os.path.join(output_dir, "tile0_spots_all_bits.csv")
     stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 
