@@ -31,7 +31,6 @@ def main(root_path: Path):
 
     input_dir = root_path / "fused"
     output_dir = root_path / "big_fish" / "results" / "all_tiles_3D"
-    # segmentation = root_path / "qi2labdatastore" / "segmentation" / "cellpose"
 
     # Create output directory if needed
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -98,7 +97,8 @@ def main(root_path: Path):
     #     print("\r dtype: {0}".format(spots.dtype))
     #     print("\r threshold: {0}".format(threshold))
 
-        spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x',])
+        spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x'])
+        print(spots_df)
         spots_df['bit'] = bit
         # Append the dataframe of the spots to the list all_spots
         all_spots.append(spots_df)
@@ -113,8 +113,6 @@ def main(root_path: Path):
     # stack.save_array(spots, output_path)
 
     # save in csv files
-    spots_df = pd.DataFrame(spots, columns=["z", "y", "x"])
-    print(spots_df.head())
     path = os.path.join(output_dir, "spots_all_bits.csv")
     stack.save_data_to_csv(spots_df, path, delimiter=',')
 
