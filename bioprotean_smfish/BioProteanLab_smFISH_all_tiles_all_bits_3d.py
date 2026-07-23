@@ -29,14 +29,14 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_dir = root_path / "big_fish" / "tiffs"
-    output_dir = root_path / "big_fish" / "results" / "all_tiles_3D"
+    input_path = root_path / "fused" / "5tiles"
+    output_path = root_path / "big_fish" / "results" / "5_tiles_3D"
 
     # Create output directory if needed
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    metadata_dir = root_path / "scan_metadata.csv"
-    metadata = pd.read_csv(metadata_dir, index_col=0)
+    metadata_path = root_path / "scan_metadata.csv"
+    metadata = pd.read_csv(metadata_path, index_col=0)
 
     # Obtain camera metadata
     # NA = numerical aperture
@@ -62,7 +62,7 @@ def main(root_path: Path):
 
         # Load in data 
         # These tiffs are the globally registered, deconvolved image
-        path = os.path.join(input_dir, "tile000bit" +str(bit).zfill(3) + ".ome.tiff")
+        path = os.path.join(input_path, "fused_bit" +str(bit).zfill(3) + "_5tile.ome.tiff")
         rna = stack.read_image(path)
         # rna = rna.astype(np.uint16)
         print(f"Bit {bit} loaded")
@@ -114,11 +114,11 @@ def main(root_path: Path):
 
     # # save results
     # # save in npy files
-    # output_path = os.path.join(output_dir, "bit5_spots.npy")
+    # output_path = os.path.join(output_path, "bit5_spots.npy")
     # stack.save_array(spots, output_path)
 
     # save in csv files
-    path = os.path.join(output_dir, "tile0_spots_all_bits.csv")
+    path = os.path.join(output_path, "spots_all_bits.csv")
     stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 
