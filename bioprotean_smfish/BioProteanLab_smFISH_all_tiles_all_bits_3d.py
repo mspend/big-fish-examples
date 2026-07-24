@@ -16,7 +16,7 @@ import time
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Fuse channels and export per-channel OME-TIFFs."
+        description="Detect smFISH spots in 3D"
     )
     parser.add_argument(
         "root_path",
