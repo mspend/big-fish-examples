@@ -102,24 +102,28 @@ def main(root_path: Path):
         spots_df['bit'] = bit
         print(spots_df)
 
-        # Append the dataframe of the spots to the list all_spots
-        all_spots.append(spots_df)
-        print(all_spots)
+        path = os.path.join(output_path, (f"spots_bit_{bit}.csv"))
+        spots_df.to_csv(path)
+
+
+        # # Append the dataframe of the spots to the list all_spots
+        # all_spots.append(spots_df)
+        # print(all_spots)
         print(f'Done with bit {bit}')
 
-    print(all_spots)
-    # Concatenate the spots from all bits
-    spots_df = pd.concat(all_spots, ignore_index=True)
-    print(spots_df)
+    # print(all_spots)
+    # # Concatenate the spots from all bits
+    # spots_df = pd.concat(all_spots, ignore_index=True)
+    # print(spots_df)
 
-    # # save results
-    # # save in npy files
-    # output_path = os.path.join(output_path, "bit5_spots.npy")
-    # stack.save_array(spots, output_path)
+    # # # save results
+    # # # save in npy files
+    # # output_path = os.path.join(output_path, "bit5_spots.npy")
+    # # stack.save_array(spots, output_path)
 
-    # save in csv files
-    path = os.path.join(output_path, "spots_all_bits.csv")
-    stack.save_data_to_csv(spots_df, path, delimiter=',')
+    # # save in csv files
+    
+    # stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 
 if __name__ == "__main__":
