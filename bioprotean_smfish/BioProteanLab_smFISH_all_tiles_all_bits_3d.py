@@ -16,7 +16,7 @@ import time
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Fuse channels and export per-channel OME-TIFFs."
+        description="Detect smFISH spots in 3D"
     )
     parser.add_argument(
         "root_path",
@@ -29,14 +29,14 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_dir = root_path / "fused"
-    output_dir = root_path / "big_fish" / "results" / "all_tiles_3D"
+    input_path = root_path / "fused" / "tile0000"
+    output_path = root_path / "big_fish" / "results" / "all_tiles_3D"
 
     # Create output directory if needed
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    metadata_dir = root_path / "scan_metadata.csv"
-    metadata = pd.read_csv(metadata_dir, index_col=0)
+    metadata_path = root_path / "scan_metadata.csv"
+    metadata = pd.read_csv(metadata_path, index_col=0)
 
     # Obtain camera metadata
     # NA = numerical aperture
@@ -58,11 +58,11 @@ def main(root_path: Path):
     print("ready for spot detection")
 
     # because range is exclusive of the stop
-    for bit in range(1, n_bits + 1):
+    for bit in range(1, n_bits+1):
 
         # Load in data 
         # These tiffs are the globally registered, deconvolved image
-        path = os.path.join(input_dir, "bit" +str(bit).zfill(3) + ".ome.tiff")
+        path = os.path.join(input_path, "tile000bit" +str(bit).zfill(3) + ".ome.tiff")
         rna = stack.read_image(path)
         # rna = rna.astype(np.uint16)
         print(f"Bit {bit} loaded")
@@ -72,6 +72,7 @@ def main(root_path: Path):
 
         if bit % 2 == 1: 
             spot_radius_yx = (lambda_yellow / (2 * na))
+
             spot_radius_z = (2* lambda_yellow / (2 * na))
             spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
 
@@ -82,39 +83,34 @@ def main(root_path: Path):
 
         print(spot_radius)
   
-        # Detect spots in 3D 
-        spots, threshold = detection.detect_spots(
-            images=rna, 
-            return_threshold=True, 
-            voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
-            spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
+        # # Detect spots in 3D 
+        # spots, threshold = detection.detect_spots(
+        #     images=rna, 
+        #     return_threshold=True, 
+        #     voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
+        #     spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
+        spots = [
+            ["a", "a", "a"],
+            ["b", "b", "b"],
+            ["c", "c", "c"]]
 
         # The function detect_spots returns the coordinates (or list of coordinates) 
         # of the spots with shape (nb_spots, 3) for 3D images.
         print(f"Spot detection for bit {bit} complete")
 
-    #     print("\r shape: {0}".format(spots.shape))
-    #     print("\r dtype: {0}".format(spots.dtype))
-    #     print("\r threshold: {0}".format(threshold))
+        # print("\r shape: {0}".format(spots.shape))
+        # print("\r dtype: {0}".format(spots.dtype))
+        # print("\r threshold: {0}".format(threshold))
 
         spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x'])
-        print(spots_df)
+        # print(spots_df)
         spots_df['bit'] = bit
-        # Append the dataframe of the spots to the list all_spots
-        all_spots.append(spots_df)
+        print(spots_df)
+
+        path = os.path.join(output_path, (f"spots_bit_{bit}.csv"))
+        spots_df.to_csv(path)
+
         print(f'Done with bit {bit}')
-
-    # Concatenate the spots from all bits
-    spots_df = pd.concat(all_spots, ignore_index=True)
-
-    # # save results
-    # # save in npy files
-    # output_path = os.path.join(output_dir, "bit5_spots.npy")
-    # stack.save_array(spots, output_path)
-
-    # save in csv files
-    path = os.path.join(output_dir, "spots_all_bits.csv")
-    stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 
 if __name__ == "__main__":
