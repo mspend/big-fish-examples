@@ -29,7 +29,7 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_path = root_path / "fused" / "tile0000"
+    input_path = root_path / "fused"
     output_path = root_path / "big_fish" / "results" / "all_tiles_3D"
 
     # Create output directory if needed
@@ -62,7 +62,7 @@ def main(root_path: Path):
 
         # Load in data 
         # These tiffs are the globally registered, deconvolved image
-        path = os.path.join(input_path, "tile000bit" +str(bit).zfill(3) + ".ome.tiff")
+        path = os.path.join(input_path, "fused_bit" +str(bit).zfill(3) + ".ome.tiff")
         rna = stack.read_image(path)
         # rna = rna.astype(np.uint16)
         print(f"Bit {bit} loaded")
@@ -80,19 +80,13 @@ def main(root_path: Path):
             spot_radius_yx = (lambda_red  / (2 * na))
             spot_radius_z = (2* lambda_red  / (2 * na))
             spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
-
-        print(spot_radius)
   
-        # # Detect spots in 3D 
-        # spots, threshold = detection.detect_spots(
-        #     images=rna, 
-        #     return_threshold=True, 
-        #     voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
-        #     spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
-        spots = [
-            ["a", "a", "a"],
-            ["b", "b", "b"],
-            ["c", "c", "c"]]
+        # Detect spots in 3D 
+        spots, threshold = detection.detect_spots(
+            images=rna, 
+            return_threshold=True, 
+            voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
+            spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
 
         # The function detect_spots returns the coordinates (or list of coordinates) 
         # of the spots with shape (nb_spots, 3) for 3D images.
@@ -103,7 +97,6 @@ def main(root_path: Path):
         # print("\r threshold: {0}".format(threshold))
 
         spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x'])
-        # print(spots_df)
         spots_df['bit'] = bit
         print(spots_df)
 
