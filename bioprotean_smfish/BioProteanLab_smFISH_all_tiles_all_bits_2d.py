@@ -30,7 +30,7 @@ def main(root_path: Path):
     root_path = Path(root_path).expanduser().resolve()
 
     input_path = root_path / "fused" / "tile0000"
-    output_path = root_path / "big_fish" / "results" / "one_tile_3D"
+    output_path = root_path / "big_fish" / "results" / "one_tile_2D"
 
     # Create output directory if needed
     output_path.mkdir(parents=True, exist_ok=True)
@@ -42,9 +42,8 @@ def main(root_path: Path):
     # NA = numerical aperture
     # provide voxel size in nanometer
     na = metadata['na'][0]
-    z_voxel = metadata['z_voxel_um'][0] * 1000 # in nanometer
     yx_voxel = metadata['yx_voxel_um'][0] * 1000 # in nanometer
-    voxel_size = [z_voxel, yx_voxel, yx_voxel]
+    voxel_size = [yx_voxel, yx_voxel]
 
     # Wavelengths of the channels
     lambda_red = 670 # Alexa647
@@ -66,25 +65,29 @@ def main(root_path: Path):
         rna = stack.read_image(path)
         # rna = rna.astype(np.uint16)
         print(f"Bit {bit} loaded")
+        print("\r shape: {0}".format(rna.shape))
+
+        # Create a maxiumum intensity projection of the RNA channel
+        rna_mip = stack.maximum_projection(rna)
+        print(f"Bit {bit} max projected")
+        print("\r shape: {0}".format(rna_mip.shape))
 
         # Spot radius calculated using Abbe’s diffraction formula for lateral (XY) resolution is: d = λ/(2NA)
         # Abbe’s diffraction formula for axial (Z) resolution is: d = 2λ/(NA)2
 
         if bit % 2 == 1: 
             spot_radius_yx = (lambda_yellow / (2 * na))
-            spot_radius_z = (2* lambda_yellow / (2 * na))
-            spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
+            spot_radius = [spot_radius_yx, spot_radius_yx]
 
         if bit % 2 == 0: 
             spot_radius_yx = (lambda_red  / (2 * na))
-            spot_radius_z = (2* lambda_red  / (2 * na))
-            spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
+            spot_radius = [spot_radius_yx, spot_radius_yx]
 
         print(spot_radius)
   
-        # Detect spots in 3D 
+        # Detect spots in 2D 
         spots, threshold = detection.detect_spots(
-            images=rna, 
+            images=rna_mip, 
             return_threshold=True, 
             voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
             spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
@@ -97,7 +100,7 @@ def main(root_path: Path):
         print("\r dtype: {0}".format(spots.dtype))
         print("\r threshold: {0}".format(threshold))
 
-        spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x'])
+        spots_df = pd.DataFrame(spots, columns=['y', 'x'])
         print(spots_df)
         spots_df['bit'] = bit
         print(spots_df)
