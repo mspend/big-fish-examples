@@ -61,8 +61,13 @@ def main(root_path: Path):
 
         # slice the Y axis in half
         midpoint = fused_readout.shape[1] // 2
-        top_image = fused_readout[..., :midpoint, :]
-        bottom_image = fused_readout[..., midpoint:, :]
+        overlap = 0.05*fused_readout.shape[1]
+        print(overlap)
+        top_image = fused_readout[:, midpoint-overlap:, :]
+        bottom_image = fused_readout[:, :midpoint+overlap, :]
+
+        print(top_image.shape)
+        print(bottom_image.shape)
 
         filename_top = "fused_bit" +str(bit).zfill(3) + "A.ome.tiff"
         filename_bottom = "fused_bit" +str(bit).zfill(3) + "B.ome.tiff"
@@ -135,20 +140,3 @@ def main(root_path: Path):
 if __name__ == "__main__":
     args = parse_args()
     main(args.root_path)
-
-
-
-
-
-
-
-
-
-tf.imwrite('left_half.ome.tif', , ome=True, description=metadata)
-tf.imwrite('right_half.ome.tif', , ome=True, description=metadata)
-
-
-
-        with tifffile.TiffFile('input.ome.tif') as tif:
-    data = tif.asarray()
-    metadata = tif.ome_xml
