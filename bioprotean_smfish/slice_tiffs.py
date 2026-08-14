@@ -63,8 +63,8 @@ def main(root_path: Path):
         midpoint = fused_readout.shape[1] // 2
         overlap = 0.05*fused_readout.shape[1]
         print(overlap)
-        top_image = fused_readout[:, midpoint-overlap:, :]
-        bottom_image = fused_readout[:, :midpoint+overlap, :]
+        bottom_image = fused_readout[:, round(midpoint-overlap):, :]
+        top_image = fused_readout[:, :round(midpoint+overlap), :]
 
         print(top_image.shape)
         print(bottom_image.shape)
@@ -84,12 +84,14 @@ def main(root_path: Path):
 
         with TiffWriter(top_path, bigtiff=True) as tif:
             metadata = {
-                "axes": "YX",
+                "axes": "ZYX",
                 "SignificantBits": 16,
                 "PhysicalSizeX": float(voxel_zyx_um[2]),
                 "PhysicalSizeXUnit": "µm",
                 "PhysicalSizeY": float(voxel_zyx_um[1]),
                 "PhysicalSizeYUnit": "µm",
+                'PhysicalSizeZ': float(voxel_zyx_um[0]),
+                'PhysicalSizeZUnit': 'µm',                
             }
             options = {
                 "compression": "zlib",
@@ -110,12 +112,14 @@ def main(root_path: Path):
 
         with TiffWriter(bottom_path, bigtiff=True) as tif:
             metadata = {
-                "axes": "YX",
+                "axes": "ZYX",
                 "SignificantBits": 16,
                 "PhysicalSizeX": float(voxel_zyx_um[2]),
                 "PhysicalSizeXUnit": "µm",
                 "PhysicalSizeY": float(voxel_zyx_um[1]),
                 "PhysicalSizeYUnit": "µm",
+                'PhysicalSizeZ': float(voxel_zyx_um[0]),
+                'PhysicalSizeZUnit': 'µm',                
             }
             options = {
                 "compression": "zlib",
