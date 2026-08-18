@@ -63,8 +63,8 @@ def main(root_path: Path):
         midpoint = fused_readout.shape[1] // 2
         overlap = 0.05*fused_readout.shape[1]
         print(overlap)
-        bottom_image = fused_readout[:, round(midpoint-overlap):, :]
-        top_image = fused_readout[:, :round(midpoint+overlap), :]
+        top_image = fused_readout[:, round(midpoint-overlap):, :]
+        bottom_image = fused_readout[:, :round(midpoint+overlap), :]
 
         print(top_image.shape)
         print(bottom_image.shape)
