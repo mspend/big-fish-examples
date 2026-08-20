@@ -29,8 +29,8 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_path = root_path / "fused"
-    output_path = root_path / "big_fish" / "results" / "all_tiles_3D"
+    input_path = root_path / "fused" / "sliced_y"
+    output_path = root_path / "big_fish" / "results" / "half_tiles_3D"
 
     # Create output directory if needed
     output_path.mkdir(parents=True, exist_ok=True)
@@ -60,13 +60,6 @@ def main(root_path: Path):
     # because range is exclusive of the stop
     for bit in range(1, n_bits+1):
 
-        # Load in data 
-        # These tiffs are the globally registered, deconvolved image
-        path = os.path.join(input_path, "fused_bit" +str(bit).zfill(3) + ".ome.tiff")
-        rna = stack.read_image(path)
-        # rna = rna.astype(np.uint16)
-        print(f"Bit {bit} loaded")
-
         # Spot radius calculated using Abbe’s diffraction formula for lateral (XY) resolution is: d = λ/(2NA)
         # Abbe’s diffraction formula for axial (Z) resolution is: d = 2λ/(NA)2
 
@@ -81,16 +74,23 @@ def main(root_path: Path):
             spot_radius_z = (2* lambda_red  / (2 * na))
             spot_radius = [spot_radius_z, spot_radius_yx, spot_radius_yx]
   
+        # Load in data for image A
+        # These tiffs are the globally registered, deconvolved image
+        path = os.path.join(input_path, "fused_bit" +str(bit).zfill(3) + "A.ome.tiff")
+        rna_a = stack.read_image(path)
+        # rna = rna.astype(np.uint16)
+        print(f"Bit {bit} A loaded")
+
         # Detect spots in 3D 
         spots, threshold = detection.detect_spots(
-            images=rna, 
+            images=rna_a, 
             return_threshold=True, 
             voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
             spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
 
         # The function detect_spots returns the coordinates (or list of coordinates) 
         # of the spots with shape (nb_spots, 3) for 3D images.
-        print(f"Spot detection for bit {bit} complete")
+        print(f"Spot detection for bit {bit} A complete")
 
         # print("\r shape: {0}".format(spots.shape))
         # print("\r dtype: {0}".format(spots.dtype))
@@ -100,7 +100,38 @@ def main(root_path: Path):
         spots_df['bit'] = bit
         print(spots_df)
 
-        path = os.path.join(output_path, (f"spots_bit_{bit}.csv"))
+        path = os.path.join(output_path, (f"spots_bit_{bit}A.csv"))
+        spots_df.to_csv(path)
+
+
+        # Load in data for image B
+        # These tiffs are the globally registered, deconvolved image
+        path = os.path.join(input_path, "fused_bit" +str(bit).zfill(3) + "B.ome.tiff")
+        rna_b = stack.read_image(path)
+        # rna = rna.astype(np.uint16)
+        print(f"Bit {bit} B loaded")
+
+
+        # Detect spots in 3D 
+        spots, threshold = detection.detect_spots(
+            images=rna_b, 
+            return_threshold=True, 
+            voxel_size=voxel_size,  # in nanometer (one value per dimension zyx)
+            spot_radius=spot_radius)  # in nanometer (one value per dimension zyx)
+
+        # The function detect_spots returns the coordinates (or list of coordinates) 
+        # of the spots with shape (nb_spots, 3) for 3D images.
+        print(f"Spot detection for bit {bit} B complete")
+
+        # print("\r shape: {0}".format(spots.shape))
+        # print("\r dtype: {0}".format(spots.dtype))
+        # print("\r threshold: {0}".format(threshold))
+
+        spots_df = pd.DataFrame(spots, columns=['z', 'y', 'x'])
+        spots_df['bit'] = bit
+        print(spots_df)
+
+        path = os.path.join(output_path, (f"spots_bit_{bit}B.csv"))
         spots_df.to_csv(path)
 
         print(f'Done with bit {bit}')
