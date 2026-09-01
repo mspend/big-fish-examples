@@ -31,10 +31,11 @@ def main(root_path: Path):
     # segmented cells
     cellpose_path = root_path / "qi2labdatastore" / "segmentation" / "cellpose"
     path = os.path.join(cellpose_path, "fiducial_max_projection_cp_masks.tif")
-    cell_label = stack.read_image(path, dtype=np.int64)
+    cell_label = stack.read_image(path).astype(np.int64)
     print("segmented cells")
     print("\r shape: {0}".format(cell_label.shape))
     print("\r dtype: {0}".format(cell_label.dtype), "\n")
+    print(cell_label.min(), cell_label.max())
 
     # maybe it would be better to load this csv using Pandas
     # header is spot_id, y, x, bit_#
@@ -47,6 +48,15 @@ def main(root_path: Path):
     print("detected spots")
     print("\r shape: {0}".format(spots.shape))
     print("\r dtype: {0}".format(spots.dtype), "\n")
+    print("y:", spots[:, 1].min(), spots[:, 1].max())
+    print("x:", spots[:, 2].min(), spots[:, 2].max())
+
+
+    
+
+
+
+
 
 
     fov_results = multistack.extract_cell(
