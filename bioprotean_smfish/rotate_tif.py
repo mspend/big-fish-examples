@@ -27,7 +27,7 @@ voxel_zyx_um = [z_voxel, yx_voxel, yx_voxel]
 n_bits = 16
 
 # because range is exclusive of the stop
-for bit in range(, n_bits+1):
+for bit in range(1, n_bits+1):
 
 # bit = 2
 
