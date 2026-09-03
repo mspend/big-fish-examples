@@ -26,63 +26,58 @@ voxel_zyx_um = [z_voxel, yx_voxel, yx_voxel]
 
 n_bits = 16
 
-# # because range is exclusive of the stop
-# for bit in range(1, n_bits+1):
+# because range is exclusive of the stop
+for bit in range(, n_bits+1):
 
-bit = 2
+# bit = 2
 
-filename = f"fused_max_projected_bit{bit:03d}.ome.tiff"
-path = root_path / "fused" / "z_max_projected" / filename
+    filename = f"fused_max_projected_bit{bit:03d}.ome.tiff"
+    path = root_path / "fused" / "z_max_projected" / filename
 
-# read in using tiffile
-image = tifffile.imread(path)
-# read in using bigfish
-# image = stack.read_image(str(path))
+    # read in using tiffile
+    image = tifffile.imread(path)
+    # read in using bigfish
+    # image = stack.read_image(str(path))
 
-# set to the desired angle
-angle = math.degrees(math.atan(274/3761))
+    # set to the desired angle
+    angle = math.degrees(math.atan(274/3761))
 
-rotated = rotate(
-    image,
-    angle=angle,
-    reshape=False,
-    order=3,          # cubic interpolation
-    mode='constant',
-    cval=0
-)
-
-output_filename = f"fused_max_projected_bit{bit:03d}_rotated.ome.tiff"
-image_path = (output_path / Path(output_filename))
-
-with TiffWriter(image_path, bigtiff=True) as tif:
-    metadata = {
-        "axes": "YX",
-        "SignificantBits": 16,
-        "PhysicalSizeX": float(voxel_zyx_um[2]),
-        "PhysicalSizeXUnit": "µm",
-        "PhysicalSizeY": float(voxel_zyx_um[1]),
-        "PhysicalSizeYUnit": "µm",
-        # 'PhysicalSizeZ': float(voxel_zyx_um[0]),
-        # 'PhysicalSizeZUnit': 'µm',                
-    }
-    options = {
-        "compression": "zlib",
-        "compressionargs": {"level": 8},
-        "predictor": True,
-        "photometric": "minisblack",
-        "resolutionunit": "CENTIMETER",
-    }
-    tif.write(
-        rotated,
-        resolution=(
-            1e4 / float(voxel_zyx_um[2]),
-            1e4 / float(voxel_zyx_um[1]),
-        ),
-        **options,
-        metadata=metadata,
+    rotated = rotate(
+        image,
+        angle=angle,
+        reshape=False,
+        order=3,          # cubic interpolation
+        mode='constant',
+        cval=0
     )
 
+    output_filename = f"fused_max_projected_bit{bit:03d}_rotated.ome.tiff"
+    image_path = (output_path / Path(output_filename))
 
-# tifffile.imwrite("fused_max_projected_bit001_rotated.tif", rotated)
-
-
+    with TiffWriter(image_path, bigtiff=True) as tif:
+        metadata = {
+            "axes": "YX",
+            "SignificantBits": 16,
+            "PhysicalSizeX": float(voxel_zyx_um[2]),
+            "PhysicalSizeXUnit": "µm",
+            "PhysicalSizeY": float(voxel_zyx_um[1]),
+            "PhysicalSizeYUnit": "µm",
+            # 'PhysicalSizeZ': float(voxel_zyx_um[0]),
+            # 'PhysicalSizeZUnit': 'µm',                
+        }
+        options = {
+            "compression": "zlib",
+            "compressionargs": {"level": 8},
+            "predictor": True,
+            "photometric": "minisblack",
+            "resolutionunit": "CENTIMETER",
+        }
+        tif.write(
+            rotated,
+            resolution=(
+                1e4 / float(voxel_zyx_um[2]),
+                1e4 / float(voxel_zyx_um[1]),
+            ),
+            **options,
+            metadata=metadata,
+        )
