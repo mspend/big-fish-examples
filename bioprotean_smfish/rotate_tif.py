@@ -31,13 +31,15 @@ for bit in range(1, n_bits+1):
 
 # bit = 2
 
-    filename = f"fused_max_projected_bit{bit:03d}.ome.tiff"
-    path = root_path / "fused" / "z_max_projected" / filename
+    filename = f"fused_bit{bit:03d}.ome.tiff"
+    path = root_path / "fused" / filename
 
     # read in using tiffile
     image = tifffile.imread(path)
     # read in using bigfish
     # image = stack.read_image(str(path))
+
+    print(f"bit {bit} loaded")
 
     # set to the desired angle
     angle = math.degrees(math.atan(274/3761))
@@ -51,19 +53,19 @@ for bit in range(1, n_bits+1):
         cval=0
     )
 
-    output_filename = f"fused_max_projected_bit{bit:03d}_rotated.ome.tiff"
+    output_filename = f"fused_bit{bit:03d}_rotated.ome.tiff"
     image_path = (output_path / Path(output_filename))
 
     with TiffWriter(image_path, bigtiff=True) as tif:
         metadata = {
-            "axes": "YX",
+            "axes": "ZYX",
             "SignificantBits": 16,
             "PhysicalSizeX": float(voxel_zyx_um[2]),
             "PhysicalSizeXUnit": "µm",
             "PhysicalSizeY": float(voxel_zyx_um[1]),
             "PhysicalSizeYUnit": "µm",
-            # 'PhysicalSizeZ': float(voxel_zyx_um[0]),
-            # 'PhysicalSizeZUnit': 'µm',                
+            'PhysicalSizeZ': float(voxel_zyx_um[0]),
+            'PhysicalSizeZUnit': 'µm',                
         }
         options = {
             "compression": "zlib",
@@ -81,3 +83,5 @@ for bit in range(1, n_bits+1):
             **options,
             metadata=metadata,
         )
+        
+        print(f"done with bit {bit}")
