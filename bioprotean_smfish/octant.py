@@ -1,14 +1,16 @@
-import os
 from pathlib import Path
 import argparse
 import pandas as pd
-import bigfish.stack as stack
+import numpy as np
+import tifffile
 from tifffile import TiffWriter
 
+# import os
+# import bigfish.stack as stack
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Load quadrant TIFFs and save one eighth of the image."
+        description="Load fused TIFFs, slice into eighths and save them as individual TIFFs."
     )
     parser.add_argument(
         "root_path",
@@ -22,8 +24,8 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_path = root_path / "fused" / "quadrants"
-    output_path = root_path / "fused" / "eighth_test"
+    input_path = root_path / "fused" / "rotated"
+    output_path = root_path / "fused" / "eighths"
     output_path.mkdir(parents=True, exist_ok=True)
 
     metadata_path = root_path / "scan_metadata.csv"
@@ -34,84 +36,107 @@ def main(root_path: Path):
         scan_metadata["yx_voxel_um"][0],
         scan_metadata["yx_voxel_um"][0],
     ]
+    # n_bits = 16
+    # for bit in range(1, n_bits+1):
 
     bit = 1
 
-    quadrant_names = [
-        "top_left",
-        "top_right",
-        "bottom_left",
-        "bottom_right",
-    ]
+   # read in fused image
+    filename = f"fused_bit{bit:03d}_rotated.ome.tiff"
+    path = input_path / filename
 
-    quadrants = {}
+    # read in using tiffile
+    full_image = tifffile.imread(path)
+    assert full_image.ndim == 3, f"Expected ZYX image, got shape {full_image.shape}"
 
-    # Load each quadrant
-    for name in quadrant_names:
+    # optionally, read in using bigfish
+    # image = stack.read_image(str(path))
+    print(f"Bit {bit} loaded")
+  
+    z_size, y_size, x_size = full_image.shape
+    print(full_image.shape)
 
-        filename = f"fused_bit{bit:03d}_{name}.ome.tiff"
-        path = input_path / filename
+    # Compute tile boundaries
+   # Split into 4 rows × 2 columns
+    y_edges = np.linspace(0, y_size, 5, dtype=int)
+    x_edges = np.linspace(0, x_size, 3, dtype=int)
 
-        image = stack.read_image(str(path))
-        quadrants[name] = image
+    # 5% TOTAL overlap
+    # (half of the overlap extends into each neighboring tile)
+    y_overlap = round(y_size * 0.025)
+    x_overlap = round(x_size * 0.025)
 
-        print(f"{name}: {image.shape}")
+    octants = {}
 
-    # Find the smallest quadrant
-    smallest_name = min(quadrants, key=lambda k: quadrants[k].size)
-    smallest = quadrants[smallest_name]
+    tile = 1
 
-    print(f"\nSmallest quadrant: {smallest_name}")
-    print(f"Shape: {smallest.shape}")
+    for row in range(4):
 
-    z, y, x = smallest.shape
+        y0 = y_edges[row]
+        y1 = y_edges[row + 1]
 
-    # Split along the smaller spatial axis
-    if y <= x:
-        print("Splitting along Y axis")
-        midpoint = y // 2
-        eighth = smallest[:, :midpoint, :]
-    else:
-        print("Splitting along X axis")
-        midpoint = x // 2
-        eighth = smallest[:, :, :midpoint]
+        # Extend interior boundaries
+        if row > 0:
+            y0 -= y_overlap
+        if row < 3:
+            y1 += y_overlap
 
-    print(f"Eighth shape: {eighth.shape}")
+        for col in range(2):
 
-    output_file = output_path / f"fused_bit{bit:03d}_{smallest_name}_eighth.ome.tiff"
+            x0 = x_edges[col]
+            x1 = x_edges[col + 1]
 
-    with TiffWriter(output_file, bigtiff=True) as tif:
+            if col > 0:
+                x0 -= x_overlap
+            if col < 1:
+                x1 += x_overlap
 
-        metadata = {
-            "axes": "ZYX",
-            "SignificantBits": 16,
-            "PhysicalSizeX": float(voxel_zyx_um[2]),
-            "PhysicalSizeXUnit": "µm",
-            "PhysicalSizeY": float(voxel_zyx_um[1]),
-            "PhysicalSizeYUnit": "µm",
-            "PhysicalSizeZ": float(voxel_zyx_um[0]),
-            "PhysicalSizeZUnit": "µm",
-        }
+            octants[tile] = full_image[:, y0:y1, x0:x1]
 
-        options = {
-            "compression": "zlib",
-            "compressionargs": {"level": 8},
-            "predictor": True,
-            "photometric": "minisblack",
-            "resolutionunit": "CENTIMETER",
-        }
+            print(f"Octant {tile}: {octants[tile].shape}")
 
-        tif.write(
-            eighth,
-            resolution=(
-                1e4 / float(voxel_zyx_um[2]),
-                1e4 / float(voxel_zyx_um[1]),
-            ),
-            **options,
-            metadata=metadata,
-        )
+            tile += 1
 
-    print(f"\nSaved test TIFF to:\n{output_file}")
+   # save each as a tiff
+    for number, image in octants.items():
+
+        output_filename = f"fused_bit{bit:03d}_{number}.ome.tiff"
+        output_file = (output_path / output_filename)
+
+        print(f"{number}: {image.shape}")
+
+        with TiffWriter(output_file, bigtiff=True) as tif:
+
+            metadata = {
+                "axes": "ZYX",
+                "SignificantBits": 16,
+                "PhysicalSizeX": float(voxel_zyx_um[2]),
+                "PhysicalSizeXUnit": "µm",
+                "PhysicalSizeY": float(voxel_zyx_um[1]),
+                "PhysicalSizeYUnit": "µm",
+                "PhysicalSizeZ": float(voxel_zyx_um[0]),
+                "PhysicalSizeZUnit": "µm",
+            }
+
+            options = {
+                "compression": "zlib",
+                "compressionargs": {"level": 8},
+                "predictor": True,
+                "photometric": "minisblack",
+                "resolutionunit": "CENTIMETER",
+            }
+
+            tif.write(
+                image,
+                resolution=(
+                    1e4 / float(voxel_zyx_um[2]),
+                    1e4 / float(voxel_zyx_um[1]),
+                ),
+                **options,
+                metadata=metadata,
+            )
+
+        print(f"\nSaved to:\n{output_file}")
 
 
 if __name__ == "__main__":
