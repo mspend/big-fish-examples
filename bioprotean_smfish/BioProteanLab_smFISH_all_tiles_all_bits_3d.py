@@ -29,8 +29,8 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_path = root_path / "fused" / "quadrants"
-    output_path = root_path / "big_fish" / "results" / "quadrants_3D"
+    input_path = root_path / "fused" / "eighth_test"
+    output_path = root_path / "big_fish" / "results" / "eighths_3D"
 
     # Create output directory if needed
     output_path.mkdir(parents=True, exist_ok=True)
@@ -77,7 +77,7 @@ def main(root_path: Path):
 
     # Load in data for image A
     # These tiffs are the globally registered, deconvolved image
-    path = os.path.join(input_path, "fused_bit" +str(bit).zfill(3) + "_top_left.ome.tiff")
+    path = os.path.join(input_path, "fused_bit" +str(bit).zfill(3) + "_top_left_eighth.ome.tiff")
     rna_a = stack.read_image(path)
     # rna = rna.astype(np.uint16)
     print(f"Bit {bit} TL loaded")
