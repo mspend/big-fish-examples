@@ -10,7 +10,7 @@ from tifffile import TiffWriter
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Load fused TIFFs, slice into eighths and save them as individual TIFFs."
+        description="Load fused TIFFs, slice into octants and save them as individual TIFFs."
     )
     parser.add_argument(
         "root_path",
@@ -25,7 +25,7 @@ def main(root_path: Path):
     root_path = Path(root_path).expanduser().resolve()
 
     input_path = root_path / "fused" / "rotated"
-    output_path = root_path / "fused" / "eighths"
+    output_path = root_path / "fused" / "octants"
     output_path.mkdir(parents=True, exist_ok=True)
 
     metadata_path = root_path / "scan_metadata.csv"
@@ -153,7 +153,7 @@ def main(root_path: Path):
     coordinate_df = pd.DataFrame(coordinates)
 
     coordinate_df.to_csv(
-        output_path / "eighth_coordinates.csv",
+        output_path / "octant_coordinates.csv",
         index=False
     )
 
