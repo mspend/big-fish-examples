@@ -1,35 +1,40 @@
 # packages availabe in merfish3d environment
 # this makes one tiff file for each bit in the tile.
 
-# from merfish3danalysis.qi2labDataStore import qi2labDataStore
+from merfish3danalysis.qi2labDataStore import qi2labDataStore
 from tifffile import TiffWriter
 from pathlib import Path
-import bigfish.stack as stack
+# import bigfish.stack as stack
 import os
+from ome_zarr.io import parse_url
+from ome_zarr.reader import Reader
+import numpy as np
 
 def main():
-    # datastore_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore")
-    # datastore = qi2labDataStore(datastore_path)
-    output_path = Path(r"/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/big_fish")
-    output_path.mkdir(parents=True, exist_ok=True)
-    # spacing_zyx_um = datastore.voxel_size_zyx_um
+    datastore_path = Path(r"/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/qi2labdatastore")
+    datastore = qi2labDataStore(datastore_path)
+    spacing_zyx_um = datastore.voxel_size_zyx_um
+
+    # Find the zarr file within this directory
+    reader = Reader(parse_url("/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/fused/fiducial.ome.zarr"))
+    node = next(reader())
+
+    # Highest-resolution level, the one with no downsampling
+    img = node.data[0]
+
+    # create max projection
+    fiducial_max_projection = np.max(np.squeeze(img), axis=0)
+    del img
 
     # if I load the rounds instead of bits, the function load_local_registered_image will automatically detect that you are looking for the fiducial channel (polyDT) instead of the bit data (spots)
 
-    tile_idx = 0
-    # round_id indexes from 0
-    # for the 1-28 data, only the first round (round 0) has a registered_decon_data for the polyDT channel in tile 0. None of the other rounds have the registered_decon_data, so the following function was returning none
-    # path_to_data = "/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/polyDT/tile0000/round001.zarr/registered_decon_data"
-    round_idx = 0
+    # tile_idx = 0
+    # # round_id indexes from 0
+    # # for the 1-28 data, only the first round (round 0) has a registered_decon_data for the polyDT channel in tile 0. None of the other rounds have the registered_decon_data, so the following function was returning none
+    # # path_to_data = "/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/polyDT/tile0000/round001.zarr/registered_decon_data"
+    # round_idx = 0
 
-    # round_data = datastore.load_local_registered_image(tile=tile_idx,round=round_idx,return_future=False)
-    path_input = "/data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers/qi2labdatastore/big_fish"
-    path = os.path.join(path_input, "tile000round000corrected_polyDT.ome.tiff")
-    polyDT = stack.read_image(path)
-
-    rna_mip = stack.maximum_projection(polyDT)
-    print("\r shape: {0}".format(rna_mip.shape))
-    print("success")
+    # # round_data = datastore.load_local_registered_image(tile=tile_idx,round=round_idx,return_future=False)
 
     # n_rounds = 8
 
@@ -51,16 +56,19 @@ def main():
     #         print(f"Warning: no image data for tile {tile_idx} round {round_idx}; skipping")
     #         continue
 
-    filename = "tile"+str(tile_idx).zfill(3)+"round"+str(round_idx).zfill(3)+"corrected_polyDT_mip.ome.tiff"
+    output_path = Path(r"/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/fused")
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    filename = "fiducial_no_downsampling.ome.tiff"
     filename_path = output_path / Path(filename)
     with TiffWriter(filename_path, bigtiff=True) as tif:
         metadata={
             'axes': 'YX',
             'SignificantBits': 16,
-            # 'PhysicalSizeX': float(spacing_zyx_um[2]),
-            # 'PhysicalSizeXUnit': 'µm',
-            # 'PhysicalSizeY': float(spacing_zyx_um[1]),
-            # 'PhysicalSizeYUnit': 'µm',
+            'PhysicalSizeX': float(spacing_zyx_um[2]),
+            'PhysicalSizeXUnit': 'µm',
+            'PhysicalSizeY': float(spacing_zyx_um[1]),
+            'PhysicalSizeYUnit': 'µm',
             # 'PhysicalSizeZ': float(spacing_zyx_um[0]),
             # 'PhysicalSizeZUnit': 'µm',
         }
@@ -72,13 +80,11 @@ def main():
             resolutionunit='CENTIMETER',
         )
         tif.write(
-            rna_mip,
-            shape=rna_mip.shape,
-            dtype=rna_mip.dtype,
-            # resolution=(
-            #     1e4 / float(spacing_zyx_um[2]),
-            #     1e4 / float(spacing_zyx_um[1])
-            # ),
+            fiducial_max_projection,
+            resolution=(
+                1e4 / float(spacing_zyx_um[2]),
+                1e4 / float(spacing_zyx_um[1])
+            ),
             **options,
             metadata=metadata
         )
