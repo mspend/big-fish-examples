@@ -29,7 +29,7 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_path = root_path / "fused" / "eighths"
+    input_path = root_path / "fused" / "octants"
     output_path = root_path / "big_fish" / "results" / "octants_3D"
 
     # Create output directory if needed
