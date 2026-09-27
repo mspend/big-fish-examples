@@ -27,7 +27,7 @@ def main(root_path: Path):
     # -------------------------------------------------------------------------
     # Load Cellpose segmentation
     # -------------------------------------------------------------------------
-    cellpose_path = root_path / "fused" / "fiducial_no_downsampling.ome_masks.tiff"
+    cellpose_path = root_path / "big_fish" / "segmentation" / "fiducial_no_downsampling_masks.ome.tiff"
 
     print(f"Loading segmentation:\n  {cellpose_path}")
 
@@ -62,7 +62,7 @@ def main(root_path: Path):
     # -------------------------------------------------------------------------
     for bit in range(1, 17):
 
-        spots_path = results_dir / f"spots_bit_{bit}.csv"
+        spots_path = results_dir / "9_18_26" / f"spots_bit_{bit}.csv"
 
         print("=" * 70)
         print(f"Processing bit {bit}")
@@ -75,7 +75,8 @@ def main(root_path: Path):
 
         # Load spots
         # preserve spot_id as a column not the index for downstream analysis
-        spots = pd.read_csv(spots_path, header=0, names = ["spot_id", "y", "x", "bit"])
+        spots = pd.read_csv(spots_path, index_col=0, usecols=["spot_id", "y", "x", "bit"])
+        print(spots.head())
 
         print(f"  spots: {len(spots):,}")
 
@@ -128,7 +129,8 @@ def main(root_path: Path):
         # ---------------------------------------------------------------------
         # Overwrite original CSV
         # ---------------------------------------------------------------------
-        spots.to_csv(spots_path)
+        results_path = results_dir / f"spots_bit_{bit}.csv"
+        spots.to_csv(results_path)
 
         print("  Added cell_id and saved.")
 
@@ -136,66 +138,6 @@ def main(root_path: Path):
     print("=" * 70)
     print("Finished processing all 16 bits.")
 
-
-if __name__ == "__main__":
-    args = parse_args()
-    main(args.root_path)
-
-
-
-
-
-
-
-
-
-
-
-
-import argparse
-from pathlib import Path
-import numpy as np
-import pandas as pd
-import bigfish
-import bigfish.stack as stack
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Detect smFISH spots in 3D"
-    )
-    parser.add_argument(
-        "root_path",
-        type=Path,
-        help="Root experiment folder (example: /data/smFISH/20251028_bartelle_smFISH_mm_microglia_newbuffers)",
-    )
-    return parser.parse_args()
-
-def main(root_path: Path):
-
-    root_path = Path(root_path).expanduser().resolve()
-
-    # segmented cells
-    cellpose_path = root_path / "fused" / "fiducial_no_downsampling.ome_masks.tiff"
-    cell_label = stack.read_image(str(cellpose_path))
-    print("segmented cells")
-    print("\r shape: {0}".format(cell_label.shape))
-    print("\r dtype: {0}".format(cell_label.dtype), "\n")
-
-    # detected spots
-    spots_path = root_path / "big_fish" / "results" / "all_tiles_2D" / "spots_bit_1.csv"
-    spots = pd.read_csv(spots_path,index_col=0)
-    print("detected spots")
-    print("\r shape: {0}".format(spots.shape))
-
-    # Coordinates must be integer pixel indices
-    y = spots["y"].to_numpy(dtype=np.int64)
-    x = spots["x"].to_numpy(dtype=np.int64)
-
-    # Assign each spot to the label at that pixel
-    spots["cell_id"] = cell_label[y, x]
-
-    output_path = root_path / "big_fish" / "results" / "all_tiles_2D" / "spots_with_cell_ids.csv"
-    spots.to_csv(str(output_path))
 
 if __name__ == "__main__":
     args = parse_args()
