@@ -26,16 +26,20 @@ img = imread(image_path)
 
 print(f"Image shape: {img.shape}")
 print(f"Image dtype: {img.dtype}")
+# print(img.min(), img.max())
+# print(np.percentile(img, [0, 1, 50, 99, 99.9, 100]))
+
+# test bright, dim, dense, and sparse regions
 
 test = img[10000:12000, 8000:10000]
 
-test_image = output_path / "test_image.tif"
+# test_image = output_path / "test_image.tif"
 
-imwrite(
-    test_image,
-    test,
-    compression="zlib",
-)
+# imwrite(
+#     test_image,
+#     test,
+#     compression="zlib",
+# )
 
 # -----------------------------------------------------------------------------
 # Load CPSAM model
@@ -47,7 +51,12 @@ model = models.CellposeModel(gpu=True)
 # Run segmentation
 # -----------------------------------------------------------------------------
 
-masks, flows, styles = model.eval(test)
+masks, flows, styles = model.eval(
+    test,
+    normalize={"tile_norm_blocksize": 512}, # test if tiled normalization is better than global normalization for images with high variability
+    cellprob_threshold=-1.0, # test2 - lower cellprob threshold to find more cells. Lowering it allows lower-confidence pixels to participate in mask creation.
+    # flow_threshold=0.6, # increase flow_threshold to get more cells. This is a QC filter: masks whose predicted flows don't agree sufficiently with the flows reconstructed from the proposed ROI are discarded.
+    )
 
 print(f"Found {masks.max()} cells")
 
@@ -60,8 +69,10 @@ del styles
 
 dtype = np.uint16 if masks.max() < 65535 else np.uint32
 
+masks_path = output_path / "fiducial_no_downsampling_test5.ome.tiff"
+
 imwrite(
-    output_path,
+    masks_path,
     masks.astype(dtype),
     compression="zlib",
 )
