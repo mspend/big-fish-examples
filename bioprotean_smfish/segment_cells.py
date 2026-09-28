@@ -45,7 +45,7 @@ print(f"Image dtype: {img.dtype}")
 # Load CPSAM model
 # -----------------------------------------------------------------------------
 
-model = models.CellposeModel(gpu=True)
+model = models.CellposeModel(gpu=False)
 
 # -----------------------------------------------------------------------------
 # Run segmentation
@@ -53,9 +53,10 @@ model = models.CellposeModel(gpu=True)
 
 masks, flows, styles = model.eval(
     img,
-    normalize={"tile_norm_blocksize": 512}, # test if tiled normalization is better than global normalization for images with high variability
-    cellprob_threshold=-1.0, # lower cellprob threshold to find more cells. Lowering it allows lower-confidence pixels to participate in mask creation.
-    flow_threshold=0.7, # increase flow_threshold to get more cells. This is a QC filter: masks whose predicted flows don't agree sufficiently with the flows reconstructed from the proposed ROI are discarded.
+    diameter= 120, # test if tiled normalization is better than global normalization for images with high variability
+    normalize={"tile_norm_blocksize": 512}, # lower cellprob threshold to find more cells. Lowering it allows lower-confidence pixels to participate in mask creation.
+    cellprob_threshold=-1.0, # increase flow_threshold to get more cells. Masks whose predicted flows don't agree sufficiently with the flows reconstructed from the proposed ROI are discarded.
+    flow_threshold=0.7, 
     )
 
 print(f"Found {masks.max()} cells")
