@@ -24,7 +24,7 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_path = root_path / "fused" / "rotated"
+    input_path = root_path / "fused"
     output_path = root_path / "fused" / "octants"
     output_path.mkdir(parents=True, exist_ok=True)
 
@@ -43,7 +43,7 @@ def main(root_path: Path):
     for bit in range(1, n_bits+1):
 
         # read in fused image
-        filename = f"fused_bit{bit:03d}_rotated.ome.tiff"
+        filename = f"fused_bit{bit:03d}.ome.tiff"
         path = input_path / filename
 
         # read in using tiffile

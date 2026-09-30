@@ -62,7 +62,7 @@ def main(root_path: Path):
     # -------------------------------------------------------------------------
     for bit in range(1, 17):
 
-        spots_path = results_dir / "9_18_26" / f"spots_bit_{bit}.csv"
+        spots_path = results_dir / f"spots_bit_{bit}.csv"
 
         print("=" * 70)
         print(f"Processing bit {bit}")
