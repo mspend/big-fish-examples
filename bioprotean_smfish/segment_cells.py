@@ -15,8 +15,9 @@ io.logger_setup()
 # Input/output
 # -----------------------------------------------------------------------------
 
-image_path = Path("/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/fused/fiducial_no_downsampling.ome.tiff")
-output_path = Path("/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/big_fish/segmentation/")
+image_path = Path("/data/smfish/20260413_bartelle_smFISH_control/fused/fiducial_no_downsampling.ome.tiff")
+output_path = Path("/data/smfish/20260413_bartelle_smFISH_control/big_fish/segmentation/")
+output_path.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
 # Load image
@@ -28,6 +29,12 @@ print(f"Image shape: {img.shape}")
 print(f"Image dtype: {img.dtype}")
 # print(img.min(), img.max())
 # print(np.percentile(img, [0, 1, 50, 99, 99.9, 100]))
+
+if img.shape > 2:
+    # create max projection
+    img = np.max(np.squeeze(img), axis=0)
+    print(img.shape)
+
 
 # test bright, dim, dense, and sparse regions
 
