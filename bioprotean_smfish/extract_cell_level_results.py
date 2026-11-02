@@ -75,7 +75,7 @@ def main(root_path: Path):
 
         # Load spots
         # preserve spot_id as a column not the index for downstream analysis
-        spots = pd.read_csv(spots_path, index_col=0, usecols=["spot_id", "y", "x", "bit"])
+        spots = pd.read_csv(spots_path, index_col=0, usecols=["y", "x", "bit"])
         print(spots.head())
 
         print(f"  spots: {len(spots):,}")
