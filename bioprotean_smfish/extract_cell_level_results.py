@@ -74,8 +74,7 @@ def main(root_path: Path):
             continue
 
         # Load spots
-        # preserve spot_id as a column not the index for downstream analysis
-        spots = pd.read_csv(spots_path, index_col=0, usecols=["y", "x", "bit"])
+        spots = pd.read_csv(spots_path, usecols=["y", "x", "bit"])
         print(spots.head())
 
         print(f"  spots: {len(spots):,}")
@@ -120,6 +119,7 @@ def main(root_path: Path):
         spots["cell_id"] = cell_label[y, x]
 
         # Count spots inside/outside segmented cells
+        # zero is the Cellpose designation for background, so cell 0 means spots outside of cells
         n_inside = np.count_nonzero(spots["cell_id"].to_numpy() != 0)
         n_outside = len(spots) - n_inside
 
