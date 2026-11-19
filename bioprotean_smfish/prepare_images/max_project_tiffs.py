@@ -16,7 +16,7 @@ from tifffile import TiffWriter
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Detect smFISH spots in 3D"
+        description=""
     )
     parser.add_argument(
         "root_path",

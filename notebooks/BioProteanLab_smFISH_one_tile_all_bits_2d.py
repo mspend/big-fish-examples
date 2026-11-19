@@ -12,11 +12,11 @@ import matplotlib.patches as mpatches
 from scipy import ndimage
 
 # hard-code the paths of our input and output directories
-path_input = "/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/fused/one_tile/"
-path_output = "/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/big_fish/results/one_tile_2D/"
+path_input = "/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/fused/one_tile/tile0022/z_max_projected/"
+path_output = "/data/smfish/20260311_bartelle_smFISH_cryo_48hr_male/big_fish/results/one_tile_2D/tile0022"
 
 n_bits = 16
-tile_idx = 0
+tile_idx = 22
 
 # All_spots is a list to which we will append all the results of the spot detection
 all_spots = []
@@ -25,16 +25,16 @@ all_spots = []
 for bit in range(1, n_bits + 1):
     # Load in data 
     # These tiffs are the registered, deconvolved image
-    path = os.path.join(path_input, "tile"+str(tile_idx).zfill(3)+"bit"+str(bit).zfill(3)+".ome.tiff")
+    path = os.path.join(path_input, "tile"+str(tile_idx).zfill(4)+"_max_projected_bit"+str(bit).zfill(3)+".ome.tiff")
     rna = stack.read_image(path)
 
-    # Create a maxiumum intensity projection of the RNA channel
-    rna_mip = stack.maximum_projection(rna)
+    # # Create a maxiumum intensity projection of the RNA channel
+    # rna_mip = stack.maximum_projection(rna)
 
     # Detect spots in 2D
     # Does not use the polyDT fiducial channel
     spots, threshold = detection.detect_spots(
-        images=rna_mip, 
+        images=rna, 
         return_threshold=True, 
         voxel_size=(103, 103),  # in nanometer (one value per dimension yx)
         spot_radius=(150, 150))  # in nanometer (one value per dimension yx)
@@ -66,10 +66,10 @@ np.save(spots_npy_path, spots_npy)
 print(f"Saved {len(spots_npy)} spots with bit identities to {spots_npy_path}")
 
 
-# # # save in csv files
-# # # The header of the csv file is y, x, bit # representing the coordinates of the spot and its identity.
-# path = os.path.join(path_output, "spots.csv")
-# stack.save_data_to_csv(spots_df, path, delimiter=',')
+# # save in csv files
+# # The header of the csv file is y, x, bit # representing the coordinates of the spot and its identity.
+path = os.path.join(path_output, "spots.csv")
+stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 # # Summarize results
 # # include all 16 bits even if one has zero spots
