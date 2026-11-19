@@ -22,8 +22,8 @@ def main(root_path: Path):
 
     root_path = Path(root_path).expanduser().resolve()
 
-    input_path = root_path / "fused"
-    output_path = root_path / "big_fish" / "results" / "all_tiles_3D"
+    input_path = root_path / "fused" / "one_tile" / "tile0022" 
+    output_path = root_path / "big_fish" / "results" / "one_tile_3D" / "tile0022"
 
     # Create output directory if needed
     output_path.mkdir(parents=True, exist_ok=True)
@@ -160,7 +160,7 @@ def main(root_path: Path):
 
     # # save in csv files
     # # The header of the csv file is y, x, bit # representing the coordinates of the spot and its identity.
-    path = output_path / "spots.csv"
+    path = str(output_path / "spots.csv")
     stack.save_data_to_csv(spots_df, path, delimiter=',')
 
 
