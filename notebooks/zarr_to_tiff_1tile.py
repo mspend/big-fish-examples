@@ -28,12 +28,12 @@ def main(root_path: Path):
     datastore = qi2labDataStore(datastore_path)
 
     # define output path   
-    output_path = root_path / "big_fish" / "tiffs"
+    output_path = root_path / "fused" / "one_tile" / "tile0022"
     output_path.mkdir(parents=True, exist_ok=True)
 
     spacing_zyx_um = datastore.voxel_size_zyx_um
 
-    tile_idx = 0
+    tile_idx = 22
     n_bits = 16
 
     for bit_idx in range(n_bits):
@@ -67,6 +67,8 @@ def main(root_path: Path):
                 **options,
                 metadata=metadata
             )
+
+            print(f"done with bit {bit_idx}")
 
 if __name__ == "__main__":
     args = parse_args()
